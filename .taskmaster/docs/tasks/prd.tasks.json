@@ -1,0 +1,109 @@
+{
+"tasks": [
+{
+"id": 1,
+"title": "Scaffold agent-browser-mcp-server project structure",
+"description": "Create the base Node and TypeScript project layout for an MCP stdio server wrapper around agent-browser.",
+"status": "pending",
+"dependencies": [],
+"priority": "high",
+"details": "Create folder agent-browser-mcp-server with package.json, tsconfig.json, and src directory. Configure package.json as ESM with type module, Node engine >=18, scripts dev build start clean, and deps @modelcontextprotocol/sdk and zod plus devDeps typescript tsx and @types/node. Configure tsconfig for ES2022 target, Node16 module and resolution, strict true, outDir dist, rootDir src, declaration and source maps enabled.",
+"testStrategy": "Run npm i then npm run build and confirm dist output is created without TypeScript errors and node dist/index.js can start without crashing.",
+"subtasks": []
+},
+{
+"id": 2,
+"title": "Implement constants module with limits and allowlist",
+"description": "Add constants for server identity, output limits, timeouts, defaults, and root command allowlist.",
+"status": "pending",
+"dependencies": [1],
+"priority": "high",
+"details": "Create agent-browser-mcp-server/src/constants.ts exporting server name and version, CHARACTER_LIMIT set to 25000, DEFAULT_TIMEOUT_MS set to 60000, DEFAULT_BIN set to agent-browser, and ALLOWED_ROOT_COMMANDS as a Set of supported top-level tokens such as open, snapshot, click, fill, type, press, connect, session, and navigation commands.",
+"testStrategy": "Typecheck imports from constants.ts in a small compile check and confirm allowlist includes expected root tokens used by the advanced tool and dedicated tools.",
+"subtasks": []
+},
+{
+"id": 3,
+"title": "Define shared CLI request and result types",
+"description": "Add TypeScript types for global options, CLI invocation requests, and normalized CLI results.",
+"status": "pending",
+"dependencies": [1],
+"priority": "high",
+"details": "Create agent-browser-mcp-server/src/types.ts defining CliGlobalOptions (session, cdpPort, headed, debug, executablePath, json, timeoutMs), CliRunRequest (argv array, optional global options, optional saveOutputPath), and CliRunResult (ok, exitCode, signal, invoked with bin and args, stdout, stderr, parsedJson, truncated, optional savedOutputPath).",
+"testStrategy": "Run TypeScript build and confirm types are consumed without any implicit any or circular import issues.",
+"subtasks": []
+},
+{
+"id": 4,
+"title": "Build agent-browser CLI execution service",
+"description": "Implement a safe child process runner that invokes agent-browser with global flags and returns parsed results.",
+"status": "pending",
+"dependencies": [2, 3],
+"priority": "high",
+"details": "Create agent-browser-mcp-server/src/services/agentBrowserCli.ts that spawns the configured agent-browser binary with shell false, pipes stdout and stderr, enforces a timeout that kills the process, and returns CliRunResult. Include input hygiene: reject NUL bytes, cap argument length, allow only relative saveOutputPath without traversal or absolute paths, and write raw stdout to saveOutputPath when provided. Default to passing --json unless explicitly disabled. Attempt to parse stdout as JSON when it looks like JSON, and avoid truncating stdout when parsedJson is present. Otherwise truncate stdout and stderr to CHARACTER_LIMIT and set truncated accordingly.",
+"testStrategy": "Run build, then run a small manual check by setting AGENT_BROWSER_BIN to a benign executable that prints non-JSON and confirm truncation and parsedJson behavior, then with a real agent-browser installation confirm ok true on a simple open and snapshot flow.",
+"subtasks": []
+},
+{
+"id": 5,
+"title": "Register core MCP tools for agent-browser interactions",
+"description": "Expose high-signal agent-browser commands as MCP tools with Zod schemas and structured outputs.",
+"status": "pending",
+"dependencies": [4],
+"priority": "high",
+"details": "Create agent-browser-mcp-server/src/tools/agentBrowserTools.ts using McpServer registerTool and Zod schemas. Define GlobalOptionsShape supporting session, cdp_port, headed, debug, executable_path, json, timeout_ms plus save_output_path. Implement mapGlobalOptions to convert MCP input to CliGlobalOptions. Register tools: agent_browser_open (supports url and optional headers passed via --headers), agent_browser_snapshot (supports interactive default true, compact default true, depth default 5, optional selector), agent_browser_click, agent_browser_fill, agent_browser_type, and agent_browser_press. Each tool should call runAgentBrowser with appropriate argv and return MCP content as JSON string plus structuredContent with the normalized result.",
+"testStrategy": "Start the server and use an MCP client to list tools and call agent_browser_open and agent_browser_snapshot. Confirm responses include ok, invoked args, stdout, stderr, parsedJson when applicable, and savedOutputPath when save_output_path is set.",
+"subtasks": []
+},
+{
+"id": 6,
+"title": "Add navigation, session, CDP connect, and headers tools",
+"description": "Expose additional utility commands needed for realistic browsing workflows and state management.",
+"status": "pending",
+"dependencies": [5],
+"priority": "medium",
+"details": "Extend agentBrowserTools.ts to register navigation tools agent_browser_back, agent_browser_forward, agent_browser_reload, and agent_browser_close; session tools agent_browser_session and agent_browser_session_list; CDP tool agent_browserp browser connect as agent_browser_connect that runs connect with the provided port; and agent_browser_set_headers that runs set headers with JSON produced from the headers record. Ensure annotations match intent for readOnlyHint and destructiveHint for close.",
+"testStrategy": "Use an MCP client to call session and session list, then connect to a known CDP port, and confirm subsequent calls can omit cdp_port if the underlying agent-browser session behavior supports it. Validate back and reload return ok and invoked args.",
+"subtasks": []
+},
+{
+"id": 7,
+"title": "Implement advanced passthrough tool with allowlist guard",
+"description": "Provide a flexible tool for agent-browser subcommands not covered by dedicated tools while preventing accidental misuse.",
+"status": "pending",
+"dependencies": [6],
+"priority": "medium",
+"details": "Add tool agent_browser_command that accepts argv array and optional global options and save_output_path. Enforce argv length at least 1 and require argv first token to be present in ALLOWED_ROOT_COMMANDS. If refused, return a normalized error result with ok false, exitCode -1, stderr indicating the first token is not allowlisted, and isError true.",
+"testStrategy": "Call agent_browser_command with a disallowed first token and confirm isError true with exitCode -1. Call it with an allowed token such as snapshot and confirm it behaves like the dedicated tool and returns structuredContent.",
+"subtasks": []
+},
+{
+"id": 8,
+"title": "Implement MCP stdio server entrypoint",
+"description": "Create the executable server that connects over stdio and registers all tools.",
+"status": "pending",
+"dependencies": [7],
+"priority": "high",
+"details": "Create agent-browser-mcp-server/src/index.ts with a node shebang, instantiate McpServer with name and version from constants, registerAgentBrowserTools, connect using StdioServerTransport, and ensure no logging to stdout. On fatal errors, log to stderr and exit nonzero.",
+"testStrategy": "Run npm run build then node dist/index.js and confirm the process starts and responds to MCP initialization and tool listing from a client without emitting extraneous stdout.",
+"subtasks": []
+},
+{
+"id": 9,
+"title": "Document installation and usage in README",
+"description": "Provide clear setup instructions, configuration hints, and workflow guidance for using the server.",
+"status": "pending",
+"dependencies": [8],
+"priority": "medium",
+"details": "Create agent-browser-mcp-server/README.md describing prerequisites to install agent-browser and Chromium deps, the need for agent-browser on PATH or via AGENT_BROWSER_BIN, install and run steps, environment variables including AGENT_BROWSER_BIN and AGENT_BROWSER_SESSION, and recommended workflow open then snapshot interactive refs then click or fill or type using refs. Include notes on CDP mode via connect or per-call cdp_port and headers via open headers or set headers.",
+"testStrategy": "Follow README steps on a clean machine: install deps, build, start, configure an MCP client, and successfully perform open and snapshot then click or fill using deterministic refs.",
+"subtasks": []
+}
+],
+"metadata": {
+"projectName": "agent-browser-mcp-server",
+"totalTasks": 9,
+"sourceFile": "scaffold_mcp.md",
+"generatedAt": "2026-01-21"
+}
+}
