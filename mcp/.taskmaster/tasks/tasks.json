@@ -2,10 +2,10 @@
   "master": {
     "tasks": [
       {
-        "id": 1,
+        "id": "1",
         "title": "Scaffold agent-browser-mcp-server project structure",
         "description": "Create the base Node and TypeScript project layout for an MCP stdio server wrapper around agent-browser.",
-        "status": "pending",
+        "status": "done",
         "dependencies": [],
         "priority": "high",
         "details": "Create folder agent-browser-mcp-server with package.json, tsconfig.json, and src directory. Configure package.json as ESM with type module, Node engine >=18, scripts dev build start clean, and deps @modelcontextprotocol/sdk and zod plus devDeps typescript tsx and @types/node. Configure tsconfig for ES2022 target, Node16 module and resolution, strict true, outDir dist, rootDir src, declaration and source maps enabled.",
@@ -17,8 +17,10 @@
             "description": "Create the project folder and initialize the package.json file with required metadata and dependency definitions.",
             "dependencies": [],
             "details": "Create directory `agent-browser-mcp-server`. Inside it, generate `package.json` with `\"type\": \"module\"`, `\"engines\": { \"node\": \">=18\" }`. Add scripts: `\"dev\": \"tsx watch src/index.ts\"`, `\"build\": \"tsc\"`, `\"start\": \"node dist/index.js\"`, `\"clean\": \"rm -rf dist\"`. Define dependencies: `@modelcontextprotocol/sdk`, `zod`. Define devDependencies: `typescript`, `tsx`, `@types/node`.",
-            "status": "pending",
-            "testStrategy": "Verify `package.json` exists and contains valid JSON with the specified properties."
+            "status": "done",
+            "testStrategy": "Verify `package.json` exists and contains valid JSON with the specified properties.",
+            "parentId": "undefined",
+            "updatedAt": "2026-01-21T21:36:15.020Z"
           },
           {
             "id": 2,
@@ -28,8 +30,10 @@
               1
             ],
             "details": "Create `agent-browser-mcp-server/tsconfig.json`. Set compilerOptions to: `\"target\": \"ES2022\"`, `\"module\": \"Node16\"`, `\"moduleResolution\": \"Node16\"`, `\"strict\": true`, `\"outDir\": \"dist\"`, `\"rootDir\": \"src\"`, `\"declaration\": true`, `\"sourceMap\": true`, `\"esModuleInterop\": true`, `\"skipLibCheck\": true`.",
-            "status": "pending",
-            "testStrategy": "Run `npx tsc --showConfig` to validate the configuration is readable and correct."
+            "status": "done",
+            "testStrategy": "Run `npx tsc --showConfig` to validate the configuration is readable and correct.",
+            "parentId": "undefined",
+            "updatedAt": "2026-01-21T21:36:15.023Z"
           },
           {
             "id": 3,
@@ -39,8 +43,10 @@
               2
             ],
             "details": "Create directory `agent-browser-mcp-server/src`. Create `agent-browser-mcp-server/src/index.ts`. Add a basic `console.log('MCP Server initialized');` to `index.ts`. Ensure the directory structure matches the `rootDir` in `tsconfig.json`.",
-            "status": "pending",
-            "testStrategy": "File system check to confirm `src/index.ts` exists."
+            "status": "done",
+            "testStrategy": "File system check to confirm `src/index.ts` exists.",
+            "parentId": "undefined",
+            "updatedAt": "2026-01-21T21:36:15.026Z"
           },
           {
             "id": 4,
@@ -50,8 +56,10 @@
               3
             ],
             "details": "Run `npm install` inside the `agent-browser-mcp-server` directory. This will generate the `node_modules` folder and `package-lock.json` based on the dependencies defined in subtask 1.",
-            "status": "pending",
-            "testStrategy": "Check for existence of `node_modules` and verify `npm list` returns without error."
+            "status": "done",
+            "testStrategy": "Check for existence of `node_modules` and verify `npm list` returns without error.",
+            "parentId": "undefined",
+            "updatedAt": "2026-01-21T21:36:15.028Z"
           },
           {
             "id": 5,
@@ -61,18 +69,24 @@
               4
             ],
             "details": "Execute `npm run build` to compile the TypeScript code to the `dist` folder. Then execute `npm start` to run the compiled code. Ensure the console output matches the content of `src/index.ts`.",
-            "status": "pending",
-            "testStrategy": "Run `npm run build` and check that `dist/index.js` is created. Run `node dist/index.js` and expect exit code 0."
+            "status": "done",
+            "testStrategy": "Run `npm run build` and check that `dist/index.js` is created. Run `node dist/index.js` and expect exit code 0.",
+            "parentId": "undefined",
+            "updatedAt": "2026-01-21T21:36:15.030Z"
           }
-        ]
+        ],
+        "complexity": 2,
+        "recommendedSubtasks": 0,
+        "expansionPrompt": "",
+        "updatedAt": "2026-01-21T21:36:15.030Z"
       },
       {
-        "id": 2,
+        "id": "2",
         "title": "Implement constants module with limits and allowlist",
         "description": "Add constants for server identity, output limits, timeouts, defaults, and root command allowlist.",
-        "status": "pending",
+        "status": "done",
         "dependencies": [
-          1
+          "1"
         ],
         "priority": "high",
         "details": "Create agent-browser-mcp-server/src/constants.ts exporting server name and version, CHARACTER_LIMIT set to 25000, DEFAULT_TIMEOUT_MS set to 60000, DEFAULT_BIN set to agent-browser, and ALLOWED_ROOT_COMMANDS as a Set of supported top-level tokens such as open, snapshot, click, fill, type, press, connect, session, and navigation commands.",
@@ -84,8 +98,10 @@
             "description": "Ensure the necessary directory structure exists for the constants module.",
             "dependencies": [],
             "details": "Check if 'agent-browser-mcp-server/src' exists. If not, create the directory 'agent-browser-mcp-server/src' to house the source code including the constants file.",
-            "status": "pending",
-            "testStrategy": "Verify directory existence using file system checks."
+            "status": "done",
+            "testStrategy": "Verify directory existence using file system checks.",
+            "parentId": "undefined",
+            "updatedAt": "2026-01-21T21:36:37.437Z"
           },
           {
             "id": 2,
@@ -95,8 +111,10 @@
               1
             ],
             "details": "Create 'agent-browser-mcp-server/src/constants.ts'. Export const SERVER_NAME = 'agent-browser-mcp-server', SERVER_VERSION = '1.0.0', CHARACTER_LIMIT = 25000, DEFAULT_TIMEOUT_MS = 60000, and DEFAULT_BIN = 'agent-browser'.",
-            "status": "pending",
-            "testStrategy": "Import these constants in a test file and assert their values match the requirements."
+            "status": "done",
+            "testStrategy": "Import these constants in a test file and assert their values match the requirements.",
+            "parentId": "undefined",
+            "updatedAt": "2026-01-21T21:36:37.441Z"
           },
           {
             "id": 3,
@@ -106,8 +124,10 @@
               2
             ],
             "details": "In 'agent-browser-mcp-server/src/constants.ts', export const ALLOWED_ROOT_COMMANDS as a Set<string>. Initialize it with 'open', 'snapshot', 'click', 'fill', 'type', 'press', 'connect', 'session', 'evaluate', 'goto', 'back', 'forward', 'refresh', 'wait'.",
-            "status": "pending",
-            "testStrategy": "Verify that ALLOWED_ROOT_COMMANDS is a Set and contains specific commands like 'open' and 'click'."
+            "status": "done",
+            "testStrategy": "Verify that ALLOWED_ROOT_COMMANDS is a Set and contains specific commands like 'open' and 'click'.",
+            "parentId": "undefined",
+            "updatedAt": "2026-01-21T21:36:37.443Z"
           },
           {
             "id": 4,
@@ -117,8 +137,10 @@
               2
             ],
             "details": "In 'agent-browser-mcp-server/src/constants.ts', export constants for specific error scenarios if needed, or simply ensure the file structure supports adding them later. For now, strictly follow the requirement: ensure all requested constants are present. Add specific error strings if they become standard, e.g., ERR_NOT_ALLOWED = 'Command not allowed'.",
-            "status": "pending",
-            "testStrategy": null
+            "status": "done",
+            "testStrategy": null,
+            "parentId": "undefined",
+            "updatedAt": "2026-01-21T21:36:37.446Z"
           },
           {
             "id": 5,
@@ -128,18 +150,24 @@
               3
             ],
             "details": "Review 'agent-browser-mcp-server/src/constants.ts' for correct TypeScript syntax, export keywords, and type definitions. Ensure it compiles without errors as part of the project build process.",
-            "status": "pending",
-            "testStrategy": "Run a typescript compilation check (tsc) on the specific file to ensure no syntax errors."
+            "status": "done",
+            "testStrategy": "Run a typescript compilation check (tsc) on the specific file to ensure no syntax errors.",
+            "parentId": "undefined",
+            "updatedAt": "2026-01-21T21:36:37.448Z"
           }
-        ]
+        ],
+        "complexity": 1,
+        "recommendedSubtasks": 0,
+        "expansionPrompt": "",
+        "updatedAt": "2026-01-21T21:36:37.448Z"
       },
       {
-        "id": 3,
+        "id": "3",
         "title": "Define shared CLI request and result types",
         "description": "Add TypeScript types for global options, CLI invocation requests, and normalized CLI results.",
-        "status": "pending",
+        "status": "done",
         "dependencies": [
-          1
+          "1"
         ],
         "priority": "high",
         "details": "Create agent-browser-mcp-server/src/types.ts defining CliGlobalOptions (session, cdpPort, headed, debug, executablePath, json, timeoutMs), CliRunRequest (argv array, optional global options, optional saveOutputPath), and CliRunResult (ok, exitCode, signal, invoked with bin and args, stdout, stderr, parsedJson, truncated, optional savedOutputPath).",
@@ -151,8 +179,10 @@
             "description": "Initialize the types file in the source directory to house shared interface definitions.",
             "dependencies": [],
             "details": "Create `agent-browser-mcp-server/src/types.ts`. This file will act as the central registry for all CLI-related TypeScript interfaces. Ensure it allows for exporting multiple interfaces.",
-            "status": "pending",
-            "testStrategy": "Verify file creation."
+            "status": "done",
+            "testStrategy": "Verify file creation.",
+            "parentId": "undefined",
+            "updatedAt": "2026-01-21T21:37:05.866Z"
           },
           {
             "id": 2,
@@ -162,8 +192,10 @@
               1
             ],
             "details": "In `src/types.ts`, define and export `CliGlobalOptions`. Fields: `session` (string?), `cdpPort` (number?), `headed` (boolean?), `debug` (boolean?), `executablePath` (string?), `json` (boolean?), `timeoutMs` (number?). Ensure optional fields are marked with `?`.",
-            "status": "pending",
-            "testStrategy": "Check for correct syntax and field types."
+            "status": "done",
+            "testStrategy": "Check for correct syntax and field types.",
+            "parentId": "undefined",
+            "updatedAt": "2026-01-21T21:37:05.868Z"
           },
           {
             "id": 3,
@@ -173,8 +205,10 @@
               2
             ],
             "details": "In `src/types.ts`, define and export `CliRunRequest`. Fields: `argv` (string[]), `options` (CliGlobalOptions?), `saveOutputPath` (string?). This represents the input needed to spawn the agent-browser process.",
-            "status": "pending",
-            "testStrategy": "Check that it correctly references CliGlobalOptions."
+            "status": "done",
+            "testStrategy": "Check that it correctly references CliGlobalOptions.",
+            "parentId": "undefined",
+            "updatedAt": "2026-01-21T21:37:05.871Z"
           },
           {
             "id": 4,
@@ -184,8 +218,10 @@
               1
             ],
             "details": "In `src/types.ts`, define a helper type or inline structure for the invocation details. For example, an object shape for `{ bin: string; args: string[] }` to track exactly what command was executed.",
-            "status": "pending",
-            "testStrategy": "Ensure structures allow representing the command line used."
+            "status": "done",
+            "testStrategy": "Ensure structures allow representing the command line used.",
+            "parentId": "undefined",
+            "updatedAt": "2026-01-21T21:37:05.874Z"
           },
           {
             "id": 5,
@@ -196,19 +232,25 @@
               4
             ],
             "details": "In `src/types.ts`, define and export `CliRunResult`. Fields: `ok` (boolean), `exitCode` (number | null), `signal` (string | null), `invoked` ({ bin: string, args: string[] }), `stdout` (string), `stderr` (string), `parsedJson` (unknown | null), `truncated` (boolean), `savedOutputPath` (string?).",
-            "status": "pending",
-            "testStrategy": "Run `tsc --noEmit` to verify type integrity and circular dependencies."
+            "status": "done",
+            "testStrategy": "Run `tsc --noEmit` to verify type integrity and circular dependencies.",
+            "parentId": "undefined",
+            "updatedAt": "2026-01-21T21:37:05.876Z"
           }
-        ]
+        ],
+        "complexity": 2,
+        "recommendedSubtasks": 0,
+        "expansionPrompt": "",
+        "updatedAt": "2026-01-21T21:37:05.876Z"
       },
       {
-        "id": 4,
+        "id": "4",
         "title": "Build agent-browser CLI execution service",
         "description": "Implement a safe child process runner that invokes agent-browser with global flags and returns parsed results.",
-        "status": "pending",
+        "status": "done",
         "dependencies": [
-          2,
-          3
+          "2",
+          "3"
         ],
         "priority": "high",
         "details": "Create agent-browser-mcp-server/src/services/agentBrowserCli.ts that spawns the configured agent-browser binary with shell false, pipes stdout and stderr, enforces a timeout that kills the process, and returns CliRunResult. Include input hygiene: reject NUL bytes, cap argument length, allow only relative saveOutputPath without traversal or absolute paths, and write raw stdout to saveOutputPath when provided. Default to passing --json unless explicitly disabled. Attempt to parse stdout as JSON when it looks like JSON, and avoid truncating stdout when parsedJson is present. Otherwise truncate stdout and stderr to CHARACTER_LIMIT and set truncated accordingly.",
@@ -220,8 +262,10 @@
             "description": "Create the validation logic to ensure all arguments and paths passed to the CLI are safe, rejecting NUL bytes and path traversal.",
             "dependencies": [],
             "details": "In `src/services/agentBrowserCli.ts`, implement a validation function that accepts the CLI request. Reject any strings containing NUL bytes. Enforce that `saveOutputPath`, if present, is a relative path (no leading `/`, no `..` segments) to prevent file system traversal. Cap individual argument lengths to a safe limit to prevent buffer issues. Ensure the binary path matches the allowed configuration.",
-            "status": "pending",
-            "testStrategy": "Write unit tests passing malicious inputs like `../../secret.txt`, strings with `\\0`, and over-long arguments to verify they are rejected with appropriate errors."
+            "status": "done",
+            "testStrategy": "Write unit tests passing malicious inputs like `../../secret.txt`, strings with `\\0`, and over-long arguments to verify they are rejected with appropriate errors.",
+            "parentId": "undefined",
+            "updatedAt": "2026-01-21T21:37:39.066Z"
           },
           {
             "id": 2,
@@ -231,8 +275,10 @@
               1
             ],
             "details": "Implement the execution function using `spawn` with `shell: false`. Configure the process to inherit the environment but restrict shell expansion. Set up a `setTimeout` based on `timeoutMs` (defaulting to `DEFAULT_TIMEOUT_MS`) that sends `SIGTERM` and then `SIGKILL` if the process hangs. Listen for `error`, `close`, and `exit` events to correctly determine the exit code or termination signal.",
-            "status": "pending",
-            "testStrategy": "Create a test spawning a dummy process that sleeps longer than the timeout to confirm it is killed. verify that exit codes and signals are correctly captured."
+            "status": "done",
+            "testStrategy": "Create a test spawning a dummy process that sleeps longer than the timeout to confirm it is killed. verify that exit codes and signals are correctly captured.",
+            "parentId": "undefined",
+            "updatedAt": "2026-01-21T21:37:39.069Z"
           },
           {
             "id": 3,
@@ -242,18 +288,24 @@
               2
             ],
             "details": "Collect stdout and stderr chunks. If `saveOutputPath` is validated and present, write raw stdout to that file. On completion, attempt to parse stdout as JSON. If valid JSON, include it in `parsedJson` without truncation. Otherwise, apply `CHARACTER_LIMIT` from constants to stringified stdout and stderr. Assemble and return the final `CliRunResult` object conforming to the defined types.",
-            "status": "pending",
-            "testStrategy": "Test with a script that outputs large text to verify truncation, and a script that outputs valid JSON to verify parsing. Check that file writing occurs when `saveOutputPath` is provided."
+            "status": "done",
+            "testStrategy": "Test with a script that outputs large text to verify truncation, and a script that outputs valid JSON to verify parsing. Check that file writing occurs when `saveOutputPath` is provided.",
+            "parentId": "undefined",
+            "updatedAt": "2026-01-21T21:37:39.071Z"
           }
-        ]
+        ],
+        "complexity": 6,
+        "recommendedSubtasks": 3,
+        "expansionPrompt": "Break down the CLI execution service into specific components: 1) A child_process spawner with timeout and signal handling, 2) An output processor that handles buffering, JSON parsing, and truncation limits, and 3) A security layer that sanitizes input paths and arguments before execution.",
+        "updatedAt": "2026-01-21T21:37:39.071Z"
       },
       {
-        "id": 5,
+        "id": "5",
         "title": "Register core MCP tools for agent-browser interactions",
         "description": "Expose high-signal agent-browser commands as MCP tools with Zod schemas and structured outputs.",
-        "status": "pending",
+        "status": "done",
         "dependencies": [
-          4
+          "4"
         ],
         "priority": "high",
         "details": "Create agent-browser-mcp-server/src/tools/agentBrowserTools.ts using McpServer registerTool and Zod schemas. Define GlobalOptionsShape supporting session, cdp_port, headed, debug, executable_path, json, timeout_ms plus save_output_path. Implement mapGlobalOptions to convert MCP input to CliGlobalOptions. Register tools: agent_browser_open (supports url and optional headers passed via --headers), agent_browser_snapshot (supports interactive default true, compact default true, depth default 5, optional selector), agent_browser_click, agent_browser_fill, agent_browser_type, and agent_browser_press. Each tool should call runAgentBrowser with appropriate argv and return MCP content as JSON string plus structuredContent with the normalized result.",
@@ -265,8 +317,10 @@
             "description": "Define Zod schemas for global options and tool inputs, and create helper functions to map these to internal CLI service arguments.",
             "dependencies": [],
             "details": "In 'agent-browser-mcp-server/src/tools/agentBrowserTools.ts', define 'GlobalOptionsShape' using Zod to validate session, cdp_port, headed, debug, executable_path, json, timeout_ms, and save_output_path. Implement a 'mapGlobalOptions' function to convert the Zod-parsed input into the 'CliGlobalOptions' interface defined in the types module. Ensure types align with the CLI execution service requirements.",
-            "status": "pending",
-            "testStrategy": "Create a unit test file to import 'mapGlobalOptions' and assert that various Zod input objects are correctly transformed into the expected 'CliGlobalOptions' structure."
+            "status": "done",
+            "testStrategy": "Create a unit test file to import 'mapGlobalOptions' and assert that various Zod input objects are correctly transformed into the expected 'CliGlobalOptions' structure.",
+            "parentId": "undefined",
+            "updatedAt": "2026-01-21T21:39:39.472Z"
           },
           {
             "id": 2,
@@ -276,18 +330,24 @@
               1
             ],
             "details": "Use 'McpServer.registerTool' to expose: 'agent_browser_open' (url, headers), 'agent_browser_snapshot' (interactive, compact, depth, selector), 'agent_browser_click', 'agent_browser_fill', 'agent_browser_type', and 'agent_browser_press'. Each tool handler must validate input via Zod, use 'mapGlobalOptions', invoke 'runAgentBrowser', and return the result as JSON content and structuredContent.",
-            "status": "pending",
-            "testStrategy": "Start the MCP server locally and use an inspector or client to list tools. Execute 'agent_browser_snapshot' to verify it calls the CLI correctly and returns the expected structured JSON output."
+            "status": "done",
+            "testStrategy": "Start the MCP server locally and use an inspector or client to list tools. Execute 'agent_browser_snapshot' to verify it calls the CLI correctly and returns the expected structured JSON output.",
+            "parentId": "undefined",
+            "updatedAt": "2026-01-21T21:39:39.474Z"
           }
-        ]
+        ],
+        "complexity": 5,
+        "recommendedSubtasks": 2,
+        "expansionPrompt": "Split the tool registration into: 1) A helper function to map MCP arguments/Zod schemas to the internal CLI execution service arguments, and 2) The specific implementation and registration of the core tools (open, snapshot, click, type, fill) using the Model Context Protocol SDK.",
+        "updatedAt": "2026-01-21T21:39:39.474Z"
       },
       {
-        "id": 6,
+        "id": "6",
         "title": "Add navigation, session, CDP connect, and headers tools",
         "description": "Expose additional utility commands needed for realistic browsing workflows and state management.",
-        "status": "pending",
+        "status": "done",
         "dependencies": [
-          5
+          "5"
         ],
         "priority": "medium",
         "details": "Extend agentBrowserTools.ts to register navigation tools agent_browser_back, agent_browser_forward, agent_browser_reload, and agent_browser_close; session tools agent_browser_session and agent_browser_session_list; CDP tool agent_browserp browser connect as agent_browser_connect that runs connect with the provided port; and agent_browser_set_headers that runs set headers with JSON produced from the headers record. Ensure annotations match intent for readOnlyHint and destructiveHint for close.",
@@ -299,8 +359,10 @@
             "description": "Create the Zod schemas for the input arguments of the new tools in the tools file.",
             "dependencies": [],
             "details": "In 'agent-browser-mcp-server/src/tools/agentBrowserTools.ts' (or where schemas are defined), extend the schema definitions. Define schemas for: 'agent_browser_back', 'agent_browser_forward', 'agent_browser_reload', 'agent_browser_close' (all using GlobalOptionsShape). Define schemas for 'agent_browser_session' (no args besides globals), 'agent_browser_session_list' (no args besides globals), 'agent_browser_connect' (requires 'port' number + globals), and 'agent_browser_set_headers' (requires 'headers' record + globals).",
-            "status": "pending",
-            "testStrategy": null
+            "status": "done",
+            "testStrategy": null,
+            "parentId": "undefined",
+            "updatedAt": "2026-01-21T21:39:39.479Z"
           },
           {
             "id": 2,
@@ -310,8 +372,10 @@
               1
             ],
             "details": "Register 'agent_browser_back', 'agent_browser_forward', 'agent_browser_reload', and 'agent_browser_close' using 'server.tool(...)'. Map these to the underlying 'agent-browser' CLI commands: 'back', 'forward', 'reload', and 'close'. Ensure 'agent_browser_close' is marked with the 'destructiveHint' annotation if supported, or documented clearly. Use 'executeAgentBrowserCommand' helper.",
-            "status": "pending",
-            "testStrategy": "Verify tools appear in tool list and 'close' command executes correctly via mock."
+            "status": "done",
+            "testStrategy": "Verify tools appear in tool list and 'close' command executes correctly via mock.",
+            "parentId": "undefined",
+            "updatedAt": "2026-01-21T21:39:39.482Z"
           },
           {
             "id": 3,
@@ -321,8 +385,10 @@
               1
             ],
             "details": "Register 'agent_browser_session' mapping to CLI command 'session' (outputs current session ID). Register 'agent_browser_session_list' mapping to CLI command 'session-list' (outputs active sessions). Both should support the standard global options for JSON output parsing.",
-            "status": "pending",
-            "testStrategy": "Check 'session-list' returns valid JSON structure when mocked."
+            "status": "done",
+            "testStrategy": "Check 'session-list' returns valid JSON structure when mocked.",
+            "parentId": "undefined",
+            "updatedAt": "2026-01-21T21:39:39.484Z"
           },
           {
             "id": 4,
@@ -332,8 +398,10 @@
               1
             ],
             "details": "Register 'agent_browser_connect'. The Zod schema must require a 'port' (integer). The implementation calls 'agent-browser connect <port>'. Ensure the output is parsed/handled correctly to confirm connection status.",
-            "status": "pending",
-            "testStrategy": "Verify tool execution passes the correct port argument to the CLI."
+            "status": "done",
+            "testStrategy": "Verify tool execution passes the correct port argument to the CLI.",
+            "parentId": "undefined",
+            "updatedAt": "2026-01-21T21:39:39.486Z"
           },
           {
             "id": 5,
@@ -343,18 +411,24 @@
               1
             ],
             "details": "Register 'agent_browser_set_headers'. The input schema requires a 'headers' object (Record<string, string>). The implementation must serialize this object to a JSON string and pass it to 'agent-browser set-headers <json_string>'. Ensure special characters in JSON are escaped properly when passing to the shell/command executor.",
-            "status": "pending",
-            "testStrategy": "Test with a sample header object and verify the CLI receives the correctly formatted JSON string."
+            "status": "done",
+            "testStrategy": "Test with a sample header object and verify the CLI receives the correctly formatted JSON string.",
+            "parentId": "undefined",
+            "updatedAt": "2026-01-21T21:39:39.488Z"
           }
-        ]
+        ],
+        "complexity": 4,
+        "recommendedSubtasks": 0,
+        "expansionPrompt": "",
+        "updatedAt": "2026-01-21T21:39:39.488Z"
       },
       {
-        "id": 7,
+        "id": "7",
         "title": "Implement advanced passthrough tool with allowlist guard",
         "description": "Provide a flexible tool for agent-browser subcommands not covered by dedicated tools while preventing accidental misuse.",
-        "status": "pending",
+        "status": "done",
         "dependencies": [
-          6
+          "6"
         ],
         "priority": "medium",
         "details": "Add tool agent_browser_command that accepts argv array and optional global options and save_output_path. Enforce argv length at least 1 and require argv first token to be present in ALLOWED_ROOT_COMMANDS. If refused, return a normalized error result with ok false, exitCode -1, stderr indicating the first token is not allowlisted, and isError true.",
@@ -366,8 +440,10 @@
             "description": "Create the Zod schema and TypeScript interface for the passthrough tool inputs.",
             "dependencies": [],
             "details": "In a new file `src/tools/passthrough.ts` (or integrated into a tools index), define the Zod schema for `agent_browser_command`. It must accept an `argv` array of strings (minimum length 1), an optional `globalOptions` object (matching `CliGlobalOptions`), and an optional `save_output_path` string. Export the schema for registration.",
-            "status": "pending",
-            "testStrategy": "Verify the Zod schema validates correct inputs and rejects empty argv arrays via a unit test."
+            "status": "done",
+            "testStrategy": "Verify the Zod schema validates correct inputs and rejects empty argv arrays via a unit test.",
+            "parentId": "undefined",
+            "updatedAt": "2026-01-21T21:39:39.492Z"
           },
           {
             "id": 2,
@@ -377,8 +453,10 @@
               1
             ],
             "details": "Import `ALLOWED_ROOT_COMMANDS` from `../constants.js`. Implement logic that checks if `argv[0]` exists in the Set. If valid, proceed; if not, return a structured error object matching `CliRunResult` with `ok: false`, `exitCode: -1`, `isError: true`, and a specific stderr message indicating the command is not allowed.",
-            "status": "pending",
-            "testStrategy": "Unit test the validation logic with allowed tokens (e.g., 'open') and disallowed tokens (e.g., 'rm', 'eval') to ensure correct rejection."
+            "status": "done",
+            "testStrategy": "Unit test the validation logic with allowed tokens (e.g., 'open') and disallowed tokens (e.g., 'rm', 'eval') to ensure correct rejection.",
+            "parentId": "undefined",
+            "updatedAt": "2026-01-21T21:39:39.494Z"
           },
           {
             "id": 3,
@@ -388,8 +466,10 @@
               2
             ],
             "details": "Import `runAgentBrowser` (or equivalent service from Task 4). In the tool handler, after validation succeeds, call the CLI service passing the full `argv`, `globalOptions`, and `save_output_path`. Map the service result directly to the tool's output format.",
-            "status": "pending",
-            "testStrategy": "Mock the CLI service and verify that the passthrough tool correctly forwards arguments and returns the service response."
+            "status": "done",
+            "testStrategy": "Mock the CLI service and verify that the passthrough tool correctly forwards arguments and returns the service response.",
+            "parentId": "undefined",
+            "updatedAt": "2026-01-21T21:39:39.497Z"
           },
           {
             "id": 4,
@@ -399,8 +479,10 @@
               3
             ],
             "details": "In `src/tools/index.ts` (or where tools are aggregated), register the `agent_browser_command` tool using the defined Zod schema and handler. Ensure the tool description clearly states it is for advanced usage and lists a few examples of allowed commands.",
-            "status": "pending",
-            "testStrategy": "Check that the tool appears in the tool list (e.g., via `listTools` if testing the MCP server instance) and has the correct name and description."
+            "status": "done",
+            "testStrategy": "Check that the tool appears in the tool list (e.g., via `listTools` if testing the MCP server instance) and has the correct name and description.",
+            "parentId": "undefined",
+            "updatedAt": "2026-01-21T21:39:39.499Z"
           },
           {
             "id": 5,
@@ -410,18 +492,24 @@
               4
             ],
             "details": "Create a test suite in `src/tools/__tests__/passthrough.test.ts`. Test cases: 1. Attempting a disallowed command (expect security error). 2. Running a valid command like `version` or `help` (expect successful execution). 3. Verifying that flags and options are preserved and passed to the underlying CLI.",
-            "status": "pending",
-            "testStrategy": "Run `npm test` and ensure all passthrough-related tests pass."
+            "status": "done",
+            "testStrategy": "Run `npm test` and ensure all passthrough-related tests pass.",
+            "parentId": "undefined",
+            "updatedAt": "2026-01-21T21:39:39.501Z"
           }
-        ]
+        ],
+        "complexity": 3,
+        "recommendedSubtasks": 0,
+        "expansionPrompt": "",
+        "updatedAt": "2026-01-21T21:39:39.501Z"
       },
       {
-        "id": 8,
+        "id": "8",
         "title": "Implement MCP stdio server entrypoint",
         "description": "Create the executable server that connects over stdio and registers all tools.",
-        "status": "pending",
+        "status": "done",
         "dependencies": [
-          7
+          "7"
         ],
         "priority": "high",
         "details": "Create agent-browser-mcp-server/src/index.ts with a node shebang, instantiate McpServer with name and version from constants, registerAgentBrowserTools, connect using StdioServerTransport, and ensure no logging to stdout. On fatal errors, log to stderr and exit nonzero.",
@@ -433,8 +521,10 @@
             "description": "Create the main entrypoint file with appropriate shebang and imports.",
             "dependencies": [],
             "details": "Create `agent-browser-mcp-server/src/index.ts`. Add `#!/usr/bin/env node` at the top. Import `McpServer` from `@modelcontextprotocol/sdk/server/mcp.js`, `StdioServerTransport` from `@modelcontextprotocol/sdk/server/stdio.js`, and `z` from `zod`. Import constants `SERVER_NAME` and `SERVER_VERSION` from `./constants.js`. Ensure imports match the module resolution strategy (ESM).",
-            "status": "pending",
-            "testStrategy": "Check file existence and syntax using `tsc --noEmit`."
+            "status": "done",
+            "testStrategy": "Check file existence and syntax using `tsc --noEmit`.",
+            "parentId": "undefined",
+            "updatedAt": "2026-01-21T21:39:55.600Z"
           },
           {
             "id": 2,
@@ -444,8 +534,10 @@
               1
             ],
             "details": "In `agent-browser-mcp-server/src/index.ts`, instantiate `new McpServer()` passing an object with `name` set to `SERVER_NAME` and `version` set to `SERVER_VERSION`. Store this in a `server` variable. Prepare the error handling block to catch startup errors, logging them to `stderr` before exiting with code 1.",
-            "status": "pending",
-            "testStrategy": "Verify the code compiles and imports constants correctly."
+            "status": "done",
+            "testStrategy": "Verify the code compiles and imports constants correctly.",
+            "parentId": "undefined",
+            "updatedAt": "2026-01-21T21:39:55.603Z"
           },
           {
             "id": 3,
@@ -455,8 +547,10 @@
               2
             ],
             "details": "Import the `registerAgentBrowserTools` function from `./tools/index.js` (or import individual tool registration functions if a single aggregator does not exist, such as `registerBrowserTools` and `registerAdvancedTool`). Call this function passing the `server` instance to register all available capabilities (browser automation, extraction, etc).",
-            "status": "pending",
-            "testStrategy": "Mock the registration function and verify it is called with the server instance."
+            "status": "done",
+            "testStrategy": "Mock the registration function and verify it is called with the server instance.",
+            "parentId": "undefined",
+            "updatedAt": "2026-01-21T21:39:55.606Z"
           },
           {
             "id": 4,
@@ -466,8 +560,10 @@
               3
             ],
             "details": "Call `server.connect(transport)` where `transport` is `new StdioServerTransport()`. Await this connection logic inside a `main` async function. Ensure this is the last step of initialization. Add a global `console.log` override or guard to prevent accidental stdout writes (which would corrupt the JSON-RPC protocol), redirecting them to stderr instead.",
-            "status": "pending",
-            "testStrategy": "Run the built script and pipe output to a file; ensure no plain text logs appear in stdout, only JSON-RPC messages."
+            "status": "done",
+            "testStrategy": "Run the built script and pipe output to a file; ensure no plain text logs appear in stdout, only JSON-RPC messages.",
+            "parentId": "undefined",
+            "updatedAt": "2026-01-21T21:39:55.608Z"
           },
           {
             "id": 5,
@@ -477,18 +573,24 @@
               4
             ],
             "details": "Update `package.json` to ensure the `bin` entry points to `./dist/index.js`. Ensure the `build` script runs `tsc`. Run `chmod +x` logic is not needed for the file itself in source, but ensure the build process produces the output. Verify the `clean` script removes the `dist` folder to ensure fresh builds.",
-            "status": "pending",
-            "testStrategy": "Run `npm run build`, then execute the binary directly via `node dist/index.js` and verify it hangs (waiting for input) rather than crashing."
+            "status": "done",
+            "testStrategy": "Run `npm run build`, then execute the binary directly via `node dist/index.js` and verify it hangs (waiting for input) rather than crashing.",
+            "parentId": "undefined",
+            "updatedAt": "2026-01-21T21:39:55.610Z"
           }
-        ]
+        ],
+        "complexity": 3,
+        "recommendedSubtasks": 0,
+        "expansionPrompt": "",
+        "updatedAt": "2026-01-21T21:39:55.610Z"
       },
       {
-        "id": 9,
+        "id": "9",
         "title": "Document installation and usage in README",
         "description": "Provide clear setup instructions, configuration hints, and workflow guidance for using the server.",
-        "status": "pending",
+        "status": "done",
         "dependencies": [
-          8
+          "8"
         ],
         "priority": "medium",
         "details": "Create agent-browser-mcp-server/README.md describing prerequisites to install agent-browser and Chromium deps, the need for agent-browser on PATH or via AGENT_BROWSER_BIN, install and run steps, environment variables including AGENT_BROWSER_BIN and AGENT_BROWSER_SESSION, and recommended workflow open then snapshot interactive refs then click or fill or type using refs. Include notes on CDP mode via connect or per-call cdp_port and headers via open headers or set headers.",
@@ -500,8 +602,10 @@
             "description": "Create the Installation section detailing system requirements and dependencies.",
             "dependencies": [],
             "details": "Create or update `agent-browser-mcp-server/README.md`. Add a 'Prerequisites' section listing Node.js >=18 and the `agent-browser` CLI tool (referencing its repo or installation method). Add an 'Installation' section with steps to clone the repo, run `npm install`, and `npm run build`. Explicitly mention that `agent-browser` must be in the system PATH or configured via environment variables.",
-            "status": "pending",
-            "testStrategy": null
+            "status": "done",
+            "testStrategy": null,
+            "parentId": "undefined",
+            "updatedAt": "2026-01-21T21:40:17.003Z"
           },
           {
             "id": 2,
@@ -511,8 +615,10 @@
               1
             ],
             "details": "Add a 'Configuration' section to the README. Document `AGENT_BROWSER_BIN` (path to the executable) and `AGENT_BROWSER_SESSION` (default session ID). Explain how to set these variables in the shell or via an MCP client configuration (e.g., Claude Desktop config). Include a table or list of all supported environment variables found in the codebase.",
-            "status": "pending",
-            "testStrategy": null
+            "status": "done",
+            "testStrategy": null,
+            "parentId": "undefined",
+            "updatedAt": "2026-01-21T21:40:17.006Z"
           },
           {
             "id": 3,
@@ -522,8 +628,10 @@
               2
             ],
             "details": "Add a 'Tools' section describing the core tools: `agent_browser_open`, `agent_browser_snapshot`, `agent_browser_click`, `agent_browser_fill`, `agent_browser_type`, and the `agent_browser_command` passthrough. For each tool, briefly explain its purpose and key arguments (e.g., `url` for open, `ref` for interaction). Mention the workflow of opening a page, snapshotting to get refs, and then interacting.",
-            "status": "pending",
-            "testStrategy": null
+            "status": "done",
+            "testStrategy": null,
+            "parentId": "undefined",
+            "updatedAt": "2026-01-21T21:40:17.008Z"
           },
           {
             "id": 4,
@@ -533,8 +641,10 @@
               3
             ],
             "details": "Add an 'Advanced Usage' section. Explain how to use the `connect` command or `cdp_port` argument for CDP mode. Document how to set custom headers via `agent_browser_open`. Provide a 'Recommended Workflow' subsection outlining the step-by-step process: Open URL -> Snapshot (interactive/compact) -> Interact (using refs) -> Snapshot again to verify state.",
-            "status": "pending",
-            "testStrategy": null
+            "status": "done",
+            "testStrategy": null,
+            "parentId": "undefined",
+            "updatedAt": "2026-01-21T21:40:17.010Z"
           },
           {
             "id": 5,
@@ -544,20 +654,26 @@
               4
             ],
             "details": "Add a 'Client Integration' section. Provide a specific JSON configuration snippet for `claude_desktop_config.json` (or generic MCP client config). Show the command to run the server (e.g., `node /path/to/agent-browser-mcp-server/dist/index.js`) and how to pass environment variables within that configuration. Ensure the `build` script is referenced as a prerequisite.",
-            "status": "pending",
-            "testStrategy": "Review the rendered Markdown to ensure the JSON snippet is valid and copy-pasteable."
+            "status": "done",
+            "testStrategy": "Review the rendered Markdown to ensure the JSON snippet is valid and copy-pasteable.",
+            "parentId": "undefined",
+            "updatedAt": "2026-01-21T21:40:17.012Z"
           }
-        ]
+        ],
+        "complexity": 2,
+        "recommendedSubtasks": 0,
+        "expansionPrompt": "",
+        "updatedAt": "2026-01-21T21:40:17.012Z"
       }
     ],
     "metadata": {
-      "projectName": "agent-browser-mcp-server",
-      "totalTasks": 9,
-      "sourceFile": "scaffold_mcp.md",
-      "generatedAt": "2026-01-21",
-      "created": "2026-01-21T21:12:14.326Z",
-      "description": "Tasks for master context",
-      "updated": "2026-01-21T21:12:14.326Z"
+      "version": "1.0.0",
+      "lastModified": "2026-01-21T21:40:17.013Z",
+      "taskCount": 9,
+      "completedCount": 9,
+      "tags": [
+        "master"
+      ]
     }
   }
 }

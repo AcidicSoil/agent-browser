@@ -1,0 +1,93 @@
+{
+	"meta": {
+		"generatedAt": "2026-01-21T20:54:11.486Z",
+		"tasksAnalyzed": 10,
+		"totalTasks": 10,
+		"analysisCount": 10,
+		"thresholdScore": 5,
+		"projectName": "Task Master",
+		"usedResearch": true
+	},
+	"complexityAnalysis": [
+		{
+			"taskId": 1,
+			"taskTitle": "Project Initialization & Configuration",
+			"complexityScore": 2,
+			"recommendedSubtasks": 0,
+			"expansionPrompt": "",
+			"reasoning": "Greenfield setup. Standard Node.js/TypeScript boilerplate. No existing code constraints or technical debt to manage. Straightforward configuration of tsconfig, eslint, and folder structure."
+		},
+		{
+			"taskId": 2,
+			"taskTitle": "CLI Argument Sanitization & Builder Service",
+			"complexityScore": 4,
+			"recommendedSubtasks": 2,
+			"expansionPrompt": "1. Create type definitions for all supported CLI flags matching the external binary's interface.\n2. Implement the builder function with robust validation logic to sanitize inputs and prevent injection vulnerabilities.",
+			"reasoning": "Requires careful mapping of TypeScript interfaces to CLI flags. Sanitization is critical here to prevent shell injection, though using `spawn` mitigates most risks. Needs comprehensive unit testing for edge cases."
+		},
+		{
+			"taskId": 3,
+			"taskTitle": "CLI Execution Service with Timeout & Output Handling",
+			"complexityScore": 5,
+			"recommendedSubtasks": 2,
+			"expansionPrompt": "1. Implement the core child_process.spawn wrapper with promise-based execution and buffer capture.\n2. Add robust timeout handling (SIGTERM/SIGKILL sequence) and signal management.",
+			"reasoning": "Core infrastructure logic. Managing child processes, especially with timeouts and buffer capturing, involves race conditions and system-specific behavior (signals). Error handling must be robust."
+		},
+		{
+			"taskId": 4,
+			"taskTitle": "Result Normalization & JSON Parsing",
+			"complexityScore": 3,
+			"recommendedSubtasks": 0,
+			"expansionPrompt": "",
+			"reasoning": "Logic is confined to parsing string output. Main complexity is handling the hybrid output (sometimes JSON, sometimes raw text) and implementing safe truncation without breaking JSON structure."
+		},
+		{
+			"taskId": 5,
+			"taskTitle": "File Persistence for Large Outputs",
+			"complexityScore": 3,
+			"recommendedSubtasks": 0,
+			"expansionPrompt": "",
+			"reasoning": "Standard file I/O operations. The primary complexity is security validation (path traversal prevention) to ensure arbitrary file overwrites are impossible."
+		},
+		{
+			"taskId": 6,
+			"taskTitle": "MCP Server Setup & Tool Registry Base",
+			"complexityScore": 4,
+			"recommendedSubtasks": 0,
+			"expansionPrompt": "",
+			"reasoning": "Integration task involving the MCP SDK. Requires setting up the transport layer and the basic structure for registering tools. Complexity comes from correct SDK usage and error propagation."
+		},
+		{
+			"taskId": 7,
+			"taskTitle": "Core Workflow Tools Implementation",
+			"complexityScore": 6,
+			"recommendedSubtasks": 3,
+			"expansionPrompt": "1. Define Zod schemas for all core tools (Open, Click, Type, etc.) to ensure strict type safety.\n2. Implement the handler logic that maps tool inputs to the CLI argument builder.\n3. Create integration tests for each tool to verify argument mapping.",
+			"reasoning": "High volume of repetitive but critical implementation work. Each tool needs specific Zod schemas and mapping logic. Any drift between the MCP tool definition and the underlying CLI binary flags will cause bugs."
+		},
+		{
+			"taskId": 8,
+			"taskTitle": "Navigation & Session Management Tools",
+			"complexityScore": 5,
+			"recommendedSubtasks": 2,
+			"expansionPrompt": "1. Implement navigation tools (Back, Forward, Reload) and Session ID management.\n2. Implement CDP connection tools ensuring port validation and error handling.",
+			"reasoning": "Similar to Task 7 but involves session state concepts. Managing the session ID passthrough correctly is crucial for stateful browsing sequences."
+		},
+		{
+			"taskId": 9,
+			"taskTitle": "Header Management & Advanced Passthrough",
+			"complexityScore": 4,
+			"recommendedSubtasks": 0,
+			"expansionPrompt": "",
+			"reasoning": "Security-sensitive task. The passthrough feature must be strictly whitelisted to prevent executing arbitrary commands. Header injection must also be handled carefully."
+		},
+		{
+			"taskId": 10,
+			"taskTitle": "Documentation & Distribution Packaging",
+			"complexityScore": 2,
+			"recommendedSubtasks": 0,
+			"expansionPrompt": "",
+			"reasoning": "Standard documentation and build configuration. Low technical risk, primarily requires attention to detail for end-user instructions."
+		}
+	]
+}

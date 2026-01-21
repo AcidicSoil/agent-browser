@@ -32,7 +32,10 @@
     "format:check": "prettier --check 'src/**/*.ts'",
     "test": "vitest run",
     "test:watch": "vitest",
-    "postinstall": "node scripts/postinstall.js"
+    "postinstall": "node scripts/postinstall.js",
+    "code": "pnpm code:src && pnpm code:mcp",
+    "code:mcp": "codefetch -t 5 --include-dir mcp -o agent-browser-mcp.md",
+    "code:src": "codefetch -t 5 --include-dir src -o agent-browser.md"
   },
   "keywords": [
     "browser",
@@ -59,6 +62,7 @@
   "devDependencies": {
     "@types/node": "^20.10.0",
     "@types/ws": "^8.18.1",
+    "codefetch": "^2.2.0",
     "husky": "^9.1.7",
     "lint-staged": "^15.2.11",
     "playwright": "^1.57.0",

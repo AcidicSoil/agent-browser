@@ -88,6 +88,7 @@ import type {
   SelectCommand,
   HoverCommand,
   ContentCommand,
+  TabNewCommand,
   TabSwitchCommand,
   TabCloseCommand,
   WindowNewCommand,
@@ -111,6 +112,7 @@ import type {
   IsCheckedCommand,
   CountCommand,
   BoundingBoxCommand,
+  StylesCommand,
   TraceStartCommand,
   TraceStopCommand,
   HarStopCommand,
@@ -161,6 +163,9 @@ import type {
   InputMouseCommand,
   InputKeyboardCommand,
   InputTouchCommand,
+  RecordingStartCommand,
+  RecordingStopCommand,
+  RecordingRestartCommand,
   NavigateData,
   ScreenshotData,
   EvaluateData,
@@ -171,7 +176,11 @@ import type {
   TabCloseData,
   ScreencastStartData,
   ScreencastStopData,
+  RecordingStartData,
+  RecordingStopData,
+  RecordingRestartData,
   InputEventData,
+  StylesData,
 } from './types.js';
 import { successResponse, errorResponse } from './protocol.js';
 
@@ -373,6 +382,8 @@ export async function executeCommand(command: Command, browser: BrowserManager):
         return await handleCount(command, browser);
       case 'boundingbox':
         return await handleBoundingBox(command, browser);
+      case 'styles':
+        return await handleStyles(command, browser);
       case 'video_start':
         return await handleVideoStart(command, browser);
       case 'video_stop':
@@ -489,6 +500,12 @@ export async function executeCommand(command: Command, browser: BrowserManager):
         return await handleInputKeyboard(command, browser);
       case 'input_touch':
         return await handleInputTouch(command, browser);
+      case 'recording_start':
+        return await handleRecordingStart(command, browser);
+      case 'recording_stop':
+        return await handleRecordingStop(command, browser);
+      case 'recording_restart':
+        return await handleRecordingRestart(command, browser);
       default: {
         // TypeScript narrows to never here, but we handle it for safety
         const unknownCommand = command as { id: string; action: string };
@@ -759,10 +776,17 @@ async function handleClose(
 }
 
 async function handleTabNew(
-  command: Command & { action: 'tab_new' },
+  command: TabNewCommand,
   browser: BrowserManager
 ): Promise<Response<TabNewData>> {
   const result = await browser.newTab();
+
+  // Navigate to URL if provided (same pattern as handleNavigate)
+  if (command.url) {
+    const page = browser.getPage();
+    await page.goto(command.url, { waitUntil: 'domcontentloaded' });
+  }
+
   return successResponse(command.id, result);
 }
 
@@ -1288,6 +1312,62 @@ async function handleBoundingBox(
   return successResponse(command.id, { box });
 }
 
+async function handleStyles(
+  command: StylesCommand,
+  browser: BrowserManager
+): Promise<Response<StylesData>> {
+  const page = browser.getPage();
+
+  // Shared extraction logic as a string to be eval'd in browser context
+  const extractStylesScript = `(function(el) {
+    const s = getComputedStyle(el);
+    const r = el.getBoundingClientRect();
+    return {
+      tag: el.tagName.toLowerCase(),
+      text: el.innerText?.trim().slice(0, 80) || null,
+      box: {
+        x: Math.round(r.x),
+        y: Math.round(r.y),
+        width: Math.round(r.width),
+        height: Math.round(r.height),
+      },
+      styles: {
+        fontSize: s.fontSize,
+        fontWeight: s.fontWeight,
+        fontFamily: s.fontFamily.split(',')[0].trim().replace(/"/g, ''),
+        color: s.color,
+        backgroundColor: s.backgroundColor,
+        borderRadius: s.borderRadius,
+        border: s.border !== 'none' && s.borderWidth !== '0px' ? s.border : null,
+        boxShadow: s.boxShadow !== 'none' ? s.boxShadow : null,
+        padding: s.padding,
+      },
+    };
+  })`;
+
+  // Check if it's a ref - single element
+  if (browser.isRef(command.selector)) {
+    const locator = browser.getLocator(command.selector);
+    const element = (await locator.evaluate((el, script) => {
+      const fn = eval(script);
+      return fn(el);
+    }, extractStylesScript)) as StylesData['elements'][0];
+    return successResponse(command.id, { elements: [element] });
+  }
+
+  // CSS selector - can match multiple elements
+  const elements = (await page.$$eval(
+    command.selector,
+    (els, script) => {
+      const fn = eval(script);
+      return els.map((el) => fn(el));
+    },
+    extractStylesScript
+  )) as StylesData['elements'];
+
+  return successResponse(command.id, { elements });
+}
+
 // Advanced handlers
 
 async function handleVideoStart(
@@ -1486,8 +1566,8 @@ async function handleInputValue(
   command: InputValueCommand,
   browser: BrowserManager
 ): Promise<Response> {
-  const page = browser.getPage();
-  const value = await page.locator(command.selector).inputValue();
+  const locator = browser.getLocator(command.selector);
+  const value = await locator.inputValue();
   return successResponse(command.id, { value });
 }
 
@@ -1948,12 +2028,47 @@ async function handleInputTouch(
   });
   return successResponse(command.id, { injected: true });
 }
+
+// Recording handlers (Playwright native video recording)
+
+async function handleRecordingStart(
+  command: RecordingStartCommand,
+  browser: BrowserManager
+): Promise<Response<RecordingStartData>> {
+  await browser.startRecording(command.path, command.url);
+  return successResponse(command.id, {
+    started: true,
+    path: command.path,
+  });
+}
+
+async function handleRecordingStop(
+  command: RecordingStopCommand,
+  browser: BrowserManager
+): Promise<Response<RecordingStopData>> {
+  const result = await browser.stopRecording();
+  return successResponse(command.id, result);
+}
+
+async function handleRecordingRestart(
+  command: RecordingRestartCommand,
+  browser: BrowserManager
+): Promise<Response<RecordingRestartData>> {
+  const result = await browser.restartRecording(command.path, command.url);
+  return successResponse(command.id, {
+    started: true,
+    path: command.path,
+    previousPath: result.previousPath,
+    stopped: result.stopped,
+  });
+}
 ```
 
 src/browser.test.ts
 ```
-import { describe, it, expect, beforeAll, afterAll } from 'vitest';
+import { describe, it, expect, beforeAll, afterAll, vi } from 'vitest';
 import { BrowserManager } from './browser.js';
+import { chromium } from 'playwright-core';
 
 describe('BrowserManager', () => {
   let browser: BrowserManager;
@@ -2344,6 +2459,35 @@ describe('BrowserManager', () => {
       const cdp2 = await browser.getCDPSession();
       expect(cdp1).toBe(cdp2);
     });
+
+    it('should filter out pages with empty URLs during CDP connection', async () => {
+      const mockBrowser = {
+        contexts: () => [
+          {
+            pages: () => [
+              { url: () => 'http://example.com', on: vi.fn() },
+              { url: () => '', on: vi.fn() }, // This page should be filtered out
+              { url: () => 'http://anothersite.com', on: vi.fn() },
+            ],
+            on: vi.fn(),
+          },
+        ],
+        close: vi.fn(),
+      };
+      const spy = vi.spyOn(chromium, 'connectOverCDP').mockResolvedValue(mockBrowser as any);
+
+      const cdpBrowser = new BrowserManager();
+      await cdpBrowser.launch({ cdpPort: 9222 });
+
+      // Should have 2 pages, not 3
+      expect(cdpBrowser.getPages().length).toBe(2);
+
+      // Verify that the empty URL page is not in the list
+      const urls = cdpBrowser.getPages().map((p) => p.url());
+      expect(urls).not.toContain('');
+      expect(urls).toContain('http://example.com');
+      spy.mockRestore();
+    });
   });
 
   describe('screencast', () => {
@@ -2359,7 +2503,7 @@ describe('BrowserManager', () => {
       expect(browser.isScreencasting()).toBe(true);
 
       // Wait a bit for at least one frame
-      await new Promise((resolve) => setTimeout(resolve, 200));
+      await new Promise((resolve) => setTimeout(resolve, 1000));
 
       await browser.stopScreencast();
       expect(browser.isScreencasting()).toBe(false);
@@ -2603,9 +2747,11 @@ import {
   type Route,
   type Locator,
   type CDPSession,
+  type Video,
 } from 'playwright-core';
 import path from 'node:path';
 import os from 'node:os';
+import { existsSync, mkdirSync, rmSync } from 'node:fs';
 import type { LaunchCommand } from './types.js';
 import { type RefMap, type EnhancedSnapshot, getEnhancedSnapshot, parseRef } from './snapshot.js';
 
@@ -2679,6 +2825,12 @@ export class BrowserManager {
   private screencastSessionId: number = 0;
   private frameCallback: ((frame: ScreencastFrame) => void) | null = null;
   private screencastFrameHandler: ((params: any) => void) | null = null;
+
+  // Video recording (Playwright native)
+  private recordingContext: BrowserContext | null = null;
+  private recordingPage: Page | null = null;
+  private recordingOutputPath: string = '';
+  private recordingTempDir: string = '';
 
   /**
    * Check if browser is launched
@@ -3273,6 +3425,7 @@ export class BrowserManager {
           args: [`--disable-extensions-except=${extPaths}`, `--load-extension=${extPaths}`],
           viewport,
           extraHTTPHeaders: options.headers,
+          ...(options.proxy && { proxy: options.proxy }),
         }
       );
       this.isPersistentContext = true;
@@ -3282,10 +3435,14 @@ export class BrowserManager {
         executablePath: options.executablePath,
       });
       this.cdpPort = null;
-      context = await this.browser.newContext({ viewport, extraHTTPHeaders: options.headers });
+      context = await this.browser.newContext({
+        viewport,
+        extraHTTPHeaders: options.headers,
+        ...(options.proxy && { proxy: options.proxy }),
+      });
     }
 
-    context.setDefaultTimeout(10000);
+    context.setDefaultTimeout(60000);
     this.contexts.push(context);
 
     const page = context.pages()[0] ?? (await context.newPage());
@@ -3316,7 +3473,9 @@ export class BrowserManager {
         throw new Error('No browser context found. Make sure the app has an open window.');
       }
 
-      const allPages = contexts.flatMap((context) => context.pages());
+      // Filter out pages with empty URLs, which can cause Playwright to hang
+      const allPages = contexts.flatMap((context) => context.pages()).filter((page) => page.url());
+
       if (allPages.length === 0) {
         throw new Error('No page found. Make sure the app has loaded content.');
       }
@@ -3419,7 +3578,7 @@ export class BrowserManager {
     const context = await this.browser.newContext({
       viewport: viewport ?? { width: 1280, height: 720 },
     });
-    context.setDefaultTimeout(10000);
+    context.setDefaultTimeout(60000);
     this.contexts.push(context);
 
     const page = await context.newPage();
@@ -3695,9 +3854,235 @@ export class BrowserManager {
   }
 
   /**
+   * Check if video recording is currently active
+   */
+  isRecording(): boolean {
+    return this.recordingContext !== null;
+  }
+
+  /**
+   * Start recording to a video file using Playwright's native video recording.
+   * Creates a fresh browser context with video recording enabled.
+   * Automatically captures current URL and transfers cookies/storage if no URL provided.
+   *
+   * @param outputPath - Path to the output video file (will be .webm)
+   * @param url - Optional URL to navigate to (defaults to current page URL)
+   */
+  async startRecording(outputPath: string, url?: string): Promise<void> {
+    if (this.recordingContext) {
+      throw new Error(
+        "Recording already in progress. Run 'record stop' first, or use 'record restart' to stop and start a new recording."
+      );
+    }
+
+    if (!this.browser) {
+      throw new Error('Browser not launched. Call launch first.');
+    }
+
+    // Check if output file already exists
+    if (existsSync(outputPath)) {
+      throw new Error(`Output file already exists: ${outputPath}`);
+    }
+
+    // Validate output path is .webm (Playwright native format)
+    if (!outputPath.endsWith('.webm')) {
+      throw new Error(
+        'Playwright native recording only supports WebM format. Please use a .webm extension.'
+      );
+    }
+
+    // Auto-capture current URL if none provided
+    const currentPage = this.pages.length > 0 ? this.pages[this.activePageIndex] : null;
+    const currentContext = this.contexts.length > 0 ? this.contexts[0] : null;
+    if (!url && currentPage) {
+      const currentUrl = currentPage.url();
+      if (currentUrl && currentUrl !== 'about:blank') {
+        url = currentUrl;
+      }
+    }
+
+    // Capture state from current context (cookies + storage)
+    let storageState:
+      | {
+          cookies: Array<{
+            name: string;
+            value: string;
+            domain: string;
+            path: string;
+            expires: number;
+            httpOnly: boolean;
+            secure: boolean;
+            sameSite: 'Strict' | 'Lax' | 'None';
+          }>;
+          origins: Array<{
+            origin: string;
+            localStorage: Array<{ name: string; value: string }>;
+          }>;
+        }
+      | undefined;
+
+    if (currentContext) {
+      try {
+        storageState = await currentContext.storageState();
+      } catch {
+        // Ignore errors - context might be closed or invalid
+      }
+    }
+
+    // Create a temp directory for video recording
+    const session = process.env.AGENT_BROWSER_SESSION || 'default';
+    this.recordingTempDir = path.join(
+      os.tmpdir(),
+      `agent-browser-recording-${session}-${Date.now()}`
+    );
+    mkdirSync(this.recordingTempDir, { recursive: true });
+
+    this.recordingOutputPath = outputPath;
+
+    // Create a new context with video recording enabled and restored state
+    const viewport = { width: 1280, height: 720 };
+    this.recordingContext = await this.browser.newContext({
+      viewport,
+      recordVideo: {
+        dir: this.recordingTempDir,
+        size: viewport,
+      },
+      storageState,
+    });
+    this.recordingContext.setDefaultTimeout(10000);
+
+    // Create a page in the recording context
+    this.recordingPage = await this.recordingContext.newPage();
+
+    // Add the recording context and page to our managed lists
+    this.contexts.push(this.recordingContext);
+    this.pages.push(this.recordingPage);
+    this.activePageIndex = this.pages.length - 1;
+
+    // Set up page tracking
+    this.setupPageTracking(this.recordingPage);
+
+    // Invalidate CDP session since we switched pages
+    await this.invalidateCDPSession();
+
+    // Navigate to URL if provided or captured
+    if (url) {
+      await this.recordingPage.goto(url, { waitUntil: 'load' });
+    }
+  }
+
+  /**
+   * Stop recording and save the video file
+   * @returns Recording result with path
+   */
+  async stopRecording(): Promise<{ path: string; frames: number; error?: string }> {
+    if (!this.recordingContext || !this.recordingPage) {
+      return { path: '', frames: 0, error: 'No recording in progress' };
+    }
+
+    const outputPath = this.recordingOutputPath;
+
+    try {
+      // Get the video object before closing the page
+      const video = this.recordingPage.video();
+
+      // Remove recording page/context from our managed lists before closing
+      const pageIndex = this.pages.indexOf(this.recordingPage);
+      if (pageIndex !== -1) {
+        this.pages.splice(pageIndex, 1);
+      }
+      const contextIndex = this.contexts.indexOf(this.recordingContext);
+      if (contextIndex !== -1) {
+        this.contexts.splice(contextIndex, 1);
+      }
+
+      // Close the page to finalize the video
+      await this.recordingPage.close();
+
+      // Save the video to the desired output path
+      if (video) {
+        await video.saveAs(outputPath);
+      }
+
+      // Clean up temp directory
+      if (this.recordingTempDir) {
+        rmSync(this.recordingTempDir, { recursive: true, force: true });
+      }
+
+      // Close the recording context
+      await this.recordingContext.close();
+
+      // Reset recording state
+      this.recordingContext = null;
+      this.recordingPage = null;
+      this.recordingOutputPath = '';
+      this.recordingTempDir = '';
+
+      // Adjust active page index
+      if (this.pages.length > 0) {
+        this.activePageIndex = Math.min(this.activePageIndex, this.pages.length - 1);
+      } else {
+        this.activePageIndex = 0;
+      }
+
+      // Invalidate CDP session since we may have switched pages
+      await this.invalidateCDPSession();
+
+      return { path: outputPath, frames: 0 }; // Playwright doesn't expose frame count
+    } catch (error) {
+      // Clean up temp directory on error
+      if (this.recordingTempDir) {
+        rmSync(this.recordingTempDir, { recursive: true, force: true });
+      }
+
+      // Reset state on error
+      this.recordingContext = null;
+      this.recordingPage = null;
+      this.recordingOutputPath = '';
+      this.recordingTempDir = '';
+
+      const message = error instanceof Error ? error.message : String(error);
+      return { path: outputPath, frames: 0, error: message };
+    }
+  }
+
+  /**
+   * Restart recording - stops current recording (if any) and starts a new one.
+   * Convenience method that combines stopRecording and startRecording.
+   *
+   * @param outputPath - Path to the output video file (must be .webm)
+   * @param url - Optional URL to navigate to (defaults to current page URL)
+   * @returns Result from stopping the previous recording (if any)
+   */
+  async restartRecording(
+    outputPath: string,
+    url?: string
+  ): Promise<{ previousPath?: string; stopped: boolean }> {
+    let previousPath: string | undefined;
+    let stopped = false;
+
+    // Stop current recording if active
+    if (this.recordingContext) {
+      const result = await this.stopRecording();
+      previousPath = result.path;
+      stopped = true;
+    }
+
+    // Start new recording
+    await this.startRecording(outputPath, url);
+
+    return { previousPath, stopped };
+  }
+
+  /**
    * Close the browser and clean up
    */
   async close(): Promise<void> {
+    // Stop recording if active (saves video)
+    if (this.recordingContext) {
+      await this.stopRecording();
+    }
+
     // Stop screencast if active
     if (this.screencastActive) {
       await this.stopScreencast();
@@ -3945,7 +4330,7 @@ export async function startDaemon(options?: { streamPort?: number }): Promise<vo
             await browser.launch({
               id: 'auto',
               action: 'launch',
-              headless: true,
+              headless: process.env.AGENT_BROWSER_HEADED !== '1',
               executablePath: process.env.AGENT_BROWSER_EXECUTABLE_PATH,
               extensions: extensions,
             });
@@ -4084,6 +4469,22 @@ describe('parseCommand', () => {
       if (result.success) {
         expect(result.command.action).toBe('navigate');
         expect(result.command.url).toBe('https://example.com');
+      }
+    });
+
+    it('should parse navigate with headers', () => {
+      const result = parseCommand(
+        cmd({
+          id: '1',
+          action: 'navigate',
+          url: 'https://example.com',
+          headers: { Authorization: 'Bearer token' },
+        })
+      );
+      expect(result.success).toBe(true);
+      if (result.success) {
+        expect(result.command.action).toBe('navigate');
+        expect(result.command.headers).toEqual({ Authorization: 'Bearer token' });
       }
     });
 
@@ -4443,6 +4844,14 @@ describe('parseCommand', () => {
     it('should parse tab_new', () => {
       const result = parseCommand(cmd({ id: '1', action: 'tab_new' }));
       expect(result.success).toBe(true);
+    });
+
+    it('should parse tab_new with url', () => {
+      const result = parseCommand(cmd({ id: '1', action: 'tab_new', url: 'https://example.com' }));
+      expect(result.success).toBe(true);
+      if (result.success) {
+        expect((result.command as { url?: string }).url).toBe('https://example.com');
+      }
     });
 
     it('should parse tab_list', () => {
@@ -5119,12 +5528,24 @@ const launchSchema = baseCommandSchema.extend({
     .optional(),
   browser: z.enum(['chromium', 'firefox', 'webkit']).optional(),
   cdpPort: z.number().positive().optional(),
+  executablePath: z.string().optional(),
+  extensions: z.array(z.string()).optional(),
+  headers: z.record(z.string()).optional(),
+  proxy: z
+    .object({
+      server: z.string().min(1),
+      bypass: z.string().optional(),
+      username: z.string().optional(),
+      password: z.string().optional(),
+    })
+    .optional(),
 });
 
 const navigateSchema = baseCommandSchema.extend({
   action: z.literal('navigate'),
   url: z.string().min(1),
   waitUntil: z.enum(['load', 'domcontentloaded', 'networkidle']).optional(),
+  headers: z.record(z.string()).optional(),
 });
 
 const clickSchema = baseCommandSchema.extend({
@@ -5395,6 +5816,11 @@ const boundingBoxSchema = baseCommandSchema.extend({
   selector: z.string().min(1),
 });
 
+const stylesSchema = baseCommandSchema.extend({
+  action: z.literal('styles'),
+  selector: z.string().min(1),
+});
+
 const videoStartSchema = baseCommandSchema.extend({
   action: z.literal('video_start'),
   path: z.string().min(1),
@@ -5402,6 +5828,23 @@ const videoStartSchema = baseCommandSchema.extend({
 
 const videoStopSchema = baseCommandSchema.extend({
   action: z.literal('video_stop'),
+});
+
+// Recording schemas (Playwright native video recording)
+const recordingStartSchema = baseCommandSchema.extend({
+  action: z.literal('recording_start'),
+  path: z.string().min(1),
+  url: z.string().min(1).optional(),
+});
+
+const recordingStopSchema = baseCommandSchema.extend({
+  action: z.literal('recording_stop'),
+});
+
+const recordingRestartSchema = baseCommandSchema.extend({
+  action: z.literal('recording_restart'),
+  path: z.string().min(1),
+  url: z.string().min(1).optional(),
 });
 
 const traceStartSchema = baseCommandSchema.extend({
@@ -5742,7 +6185,7 @@ const pressSchema = baseCommandSchema.extend({
 
 const screenshotSchema = baseCommandSchema.extend({
   action: z.literal('screenshot'),
-  path: z.string().optional(),
+  path: z.string().nullable().optional(),
   fullPage: z.boolean().optional(),
   selector: z.string().min(1).optional(),
   format: z.enum(['png', 'jpeg']).optional(),
@@ -5802,6 +6245,7 @@ const closeSchema = baseCommandSchema.extend({
 // Tab/Window schemas
 const tabNewSchema = baseCommandSchema.extend({
   action: z.literal('tab_new'),
+  url: z.string().min(1).optional(),
 });
 
 const tabListSchema = baseCommandSchema.extend({
@@ -5891,8 +6335,12 @@ const commandSchema = z.discriminatedUnion('action', [
   isCheckedSchema,
   countSchema,
   boundingBoxSchema,
+  stylesSchema,
   videoStartSchema,
   videoStopSchema,
+  recordingStartSchema,
+  recordingStopSchema,
+  recordingRestartSchema,
   traceStartSchema,
   traceStopSchema,
   harStartSchema,
@@ -6864,6 +7312,12 @@ export interface LaunchCommand extends BaseCommand {
   executablePath?: string;
   cdpPort?: number;
   extensions?: string[];
+  proxy?: {
+    server: string;
+    bypass?: string;
+    username?: string;
+    password?: string;
+  };
 }
 
 export interface NavigateCommand extends BaseCommand {
@@ -7158,6 +7612,12 @@ export interface BoundingBoxCommand extends BaseCommand {
   selector: string;
 }
 
+// Computed styles
+export interface StylesCommand extends BaseCommand {
+  action: 'styles';
+  selector: string;
+}
+
 // More semantic locators
 export interface GetByAltTextCommand extends BaseCommand {
   action: 'getbyalttext';
@@ -7350,7 +7810,7 @@ export interface InputTouchCommand extends BaseCommand {
   modifiers?: number;
 }
 
-// Video recording
+// Video recording (Playwright native - requires launch-time setup)
 export interface VideoStartCommand extends BaseCommand {
   action: 'video_start';
   path: string;
@@ -7358,6 +7818,23 @@ export interface VideoStartCommand extends BaseCommand {
 
 export interface VideoStopCommand extends BaseCommand {
   action: 'video_stop';
+}
+
+// Screen recording (Playwright native - creates fresh recording context)
+export interface RecordingStartCommand extends BaseCommand {
+  action: 'recording_start';
+  path: string;
+  url?: string;
+}
+
+export interface RecordingStopCommand extends BaseCommand {
+  action: 'recording_stop';
+}
+
+export interface RecordingRestartCommand extends BaseCommand {
+  action: 'recording_restart';
+  path: string;
+  url?: string;
 }
 
 // Tracing
@@ -7597,6 +8074,7 @@ export interface CloseCommand extends BaseCommand {
 // Tab/Window commands
 export interface TabNewCommand extends BaseCommand {
   action: 'tab_new';
+  url?: string;
 }
 
 export interface TabListCommand extends BaseCommand {
@@ -7681,8 +8159,12 @@ export type Command =
   | IsCheckedCommand
   | CountCommand
   | BoundingBoxCommand
+  | StylesCommand
   | VideoStartCommand
   | VideoStopCommand
+  | RecordingStartCommand
+  | RecordingStopCommand
+  | RecordingRestartCommand
   | TraceStartCommand
   | TraceStopCommand
   | HarStartCommand
@@ -7816,8 +8298,48 @@ export interface ScreencastStopData {
   stopped: boolean;
 }
 
+export interface RecordingStartData {
+  started: boolean;
+  path: string;
+}
+
+export interface RecordingStopData {
+  path: string;
+  frames: number;
+  error?: string;
+}
+
+export interface RecordingRestartData {
+  started: boolean;
+  path: string;
+  previousPath?: string;
+  stopped: boolean;
+}
+
 export interface InputEventData {
   injected: boolean;
+}
+
+// Element styles data
+export interface ElementStyleInfo {
+  tag: string;
+  text: string | null;
+  box: { x: number; y: number; width: number; height: number };
+  styles: {
+    fontSize: string;
+    fontWeight: string;
+    fontFamily: string;
+    color: string;
+    backgroundColor: string;
+    borderRadius: string;
+    border: string | null;
+    boxShadow: string | null;
+    padding: string;
+  };
+}
+
+export interface StylesData {
+  elements: ElementStyleInfo[];
 }
 
 // Browser state

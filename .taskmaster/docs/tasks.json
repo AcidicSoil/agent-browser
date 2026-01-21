@@ -1,0 +1,568 @@
+{
+  "master": {
+    "tasks": [
+      {
+        "id": 1,
+        "title": "Project Initialization & Configuration",
+        "description": "Initialize the TypeScript project structure, configure build tools, and set up the foundation constants and types.",
+        "details": "Initialize a new Node.js project with TypeScript. Install necessary dev dependencies (`typescript`, `@types/node`, `ts-node`, `eslint`, `prettier`). Create `tsconfig.json` optimized for Node.js (target ES2022, module commonjs or nodenext). Create the directory structure (`src/services`, `src/tools`, `src/utils`). Implement `src/constants.ts` to export `SERVER_NAME`, `SERVER_VERSION`, `DEFAULT_TIMEOUT_MS`, `ALLOWED_ROOT_COMMANDS` (e.g., open, snapshot, click, type, etc.), and `AGENT_BROWSER_BIN`. Implement `src/types.ts` to define `CliRunRequest`, `CliRunResult`, and `CliGlobalOptions` interfaces ensuring strict typing for the service layer.",
+        "testStrategy": "Verify `tsconfig.json` valid configuration. Create a simple test file that imports constants and types to ensure compilation success. Verify exports match PRD specifications.",
+        "priority": "high",
+        "dependencies": [],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Initialize Node.js Project & Dependencies",
+            "description": "Initialize package.json and install core TypeScript and linting dependencies.",
+            "dependencies": [],
+            "details": "Run `npm init -y` to create package.json. Install dev dependencies: `typescript`, `@types/node`, `ts-node`, `eslint`, `prettier`, and `@typescript-eslint/parser`, `@typescript-eslint/eslint-plugin`. Install runtime dependency `@modelcontextprotocol/sdk` (anticipated for future tasks). Configure basic scripts in package.json (build, start, lint).",
+            "status": "pending",
+            "testStrategy": "Check if package.json exists and node_modules are populated. Verify `npm install` runs without errors."
+          },
+          {
+            "id": 2,
+            "title": "Configure TypeScript Environment",
+            "description": "Create and configure tsconfig.json optimized for Node.js 20+ environment.",
+            "dependencies": [
+              1
+            ],
+            "details": "Create `tsconfig.json`. Set `compilerOptions`: `target` to 'ES2022', `module` to 'NodeNext', `moduleResolution` to 'NodeNext', `rootDir` to './src', `outDir` to './dist', `strict` to true, `esModuleInterop` to true. Ensure `include` covers 'src/**/*'.",
+            "status": "pending",
+            "testStrategy": "Run `npx tsc --noEmit` to verify configuration validity."
+          },
+          {
+            "id": 3,
+            "title": "Setup Linting and Formatting",
+            "description": "Configure ESLint and Prettier for consistent code style and error catching.",
+            "dependencies": [
+              1
+            ],
+            "details": "Create `.eslintrc.js` (or .json) and `.prettierrc`. Configure ESLint to use the TypeScript parser and plugins installed in step 1. specific rules: explicit-function-return-type off, no-unused-vars warn. Set up a `.prettierignore` and `.eslintignore` to exclude `dist/` and `node_modules/`.",
+            "status": "pending",
+            "testStrategy": "Run `npm run lint` (once a file exists) to confirm linter execution."
+          },
+          {
+            "id": 4,
+            "title": "Create Directory Structure & Constants",
+            "description": "Scaffold the src folder structure and implement the constants module.",
+            "dependencies": [
+              2
+            ],
+            "details": "Create directories: `src/services`, `src/tools`, `src/utils`. Create `src/constants.ts`. Export `SERVER_NAME`='agent-browser-mcp', `SERVER_VERSION`='0.1.0', `DEFAULT_TIMEOUT_MS`=30000, `ALLOWED_ROOT_COMMANDS`=['open', 'click', 'type', 'scroll', 'wait', 'snapshot', 'evaluate'], and `AGENT_BROWSER_BIN` (defaulting to environment variable or 'agent-browser').",
+            "status": "pending",
+            "testStrategy": "Import constants in a temporary test file and log them to verify values."
+          },
+          {
+            "id": 5,
+            "title": "Define Core Type Definitions",
+            "description": "Implement shared interfaces and types for the application in a dedicated type definition file.",
+            "dependencies": [
+              4
+            ],
+            "details": "Create `src/types.ts`. Define interfaces `CliGlobalOptions` (mapping to CLI flags like headed, video, etc.), `CliRunRequest` (structure for command execution), and `CliRunResult` (structure for parsed stdout/stderr). Ensure strict typing for these interfaces to be used in the Service layer.",
+            "status": "pending",
+            "testStrategy": "Create a dummy file that implements these interfaces to ensure types resolve correctly."
+          }
+        ]
+      },
+      {
+        "id": 2,
+        "title": "CLI Argument Sanitization & Builder Service",
+        "description": "Implement the logic to sanitize inputs and construct CLI arguments for the agent-browser binary.",
+        "details": "Create `src/services/argBuilder.ts` (or part of `agentBrowserCli.ts`). Implement a function `buildGlobalArgs(options: CliGlobalOptions): string[]` that maps options like `session`, `cdp_port`, `headed`, `debug`, `executable_path`, `timeout_ms` to their corresponding CLI flags. Ensure `--json` is included by default unless disabled. Implement input sanitization to reject NUL bytes and check for overly long arguments to prevent shell injection or buffer issues (even though `spawn` is used, sanitization is best practice). Handle `AGENT_BROWSER_SESSION` env var fallback.",
+        "testStrategy": "Unit tests: Pass various combinations of `CliGlobalOptions` and assert the resulting string array contains the correct flags in the expected order. Test sanitation by passing malicious strings and expecting errors.",
+        "priority": "high",
+        "dependencies": [
+          1
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Define CLI Interfaces and Sanitization Utilities",
+            "description": "Create TypeScript definitions for CLI options and implement input validation helpers.",
+            "dependencies": [],
+            "details": "Create `src/services/argBuilder.ts` (or a types file). Define the `CliGlobalOptions` interface covering fields like `session`, `cdp_port`, `headed`, `debug`, `executable_path`, and `timeout_ms`. Implement a `validateInput` helper function that rejects strings containing NUL bytes (`\\0`) or exceeding a specific length limit (e.g., 2048 characters) to prevent buffer overflows or injection attempts.",
+            "status": "pending",
+            "testStrategy": "Unit tests for `validateInput` passing strings with special characters, NUL bytes, and long strings to verify rejection logic."
+          },
+          {
+            "id": 2,
+            "title": "Implement Argument Builder Function",
+            "description": "Develop the main logic to transform the options object into a sanitized array of CLI arguments.",
+            "dependencies": [
+              1
+            ],
+            "details": "In `src/services/argBuilder.ts`, implement `buildGlobalArgs(options: CliGlobalOptions): string[]`. Logic must include: mapping properties to specific flags (e.g., `cdp_port` to `--cdp-port`), enforcing the presence of `--json`, falling back to `process.env.AGENT_BROWSER_SESSION` if the session ID is missing, and applying the validation helper from step 1 to all dynamic values before adding them to the array.",
+            "status": "pending",
+            "testStrategy": "Unit tests verifying that `buildGlobalArgs` returns the correct array order and content for various input combinations, including boolean flags and optional parameters."
+          }
+        ]
+      },
+      {
+        "id": 3,
+        "title": "CLI Execution Service with Timeout & Output Handling",
+        "description": "Implement the core service to spawn the agent-browser process, handle timeouts, and capture stdout/stderr.",
+        "details": "Develop `src/services/agentBrowserCli.ts`. Use `child_process.spawn` (not `exec` to avoid shell interpretation). Implement `runAgentBrowser` function. Integrate a timeout mechanism using `setTimeout` to send `SIGKILL` to the child process if it exceeds `timeout_ms` (default 60s). Capture `stdout` and `stderr` buffers. Handle process exit codes and signals. Return a raw result object containing output strings and exit metadata.",
+        "testStrategy": "Integration tests: Mock `spawn` or use a dummy script that sleeps to test timeout termination. meaningful stdout/stderr capture tests using a script that prints known text.",
+        "priority": "high",
+        "dependencies": [
+          2
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Implement Basic Spawn Wrapper and Output Capture",
+            "description": "Create the core `runAgentBrowser` function using `child_process.spawn` to execute the binary and capture stdout/stderr streams.",
+            "dependencies": [],
+            "details": "Initialize `src/services/agentBrowserCli.ts`. Implement the `runAgentBrowser` function that takes an array of arguments. Use `child_process.spawn` to run the command. attach listeners to `stdout` and `stderr` streams to collect data into strings. Handle the `close` event to resolve the Promise with a result object containing `stdout`, `stderr`, and `exitCode`. Ensure proper error handling for immediate spawn failures.",
+            "status": "pending",
+            "testStrategy": "Unit test using a simple command like `echo` or `ls` to verify that output is correctly captured and the promise resolves with the expected exit code."
+          },
+          {
+            "id": 2,
+            "title": "Add Timeout Handling and Signal Management",
+            "description": "Integrate a robust timeout mechanism to terminate the child process if execution exceeds the defined limit.",
+            "dependencies": [
+              1
+            ],
+            "details": "Extend `runAgentBrowser` to accept a `timeout_ms` option. Set up a `setTimeout` that sends `SIGKILL` (or a `SIGTERM` -> `SIGKILL` sequence) to the child process if triggered. Ensure the timer is cleared (`clearTimeout`) if the process exits naturally to prevent open handles. Update the return object to include metadata indicating if a timeout occurred.",
+            "status": "pending",
+            "testStrategy": "Integration test using a command that sleeps longer than the timeout duration (e.g., `sleep 5` with 1s timeout) to verify the process is killed and the timeout is reported."
+          }
+        ]
+      },
+      {
+        "id": 4,
+        "title": "Result Normalization & JSON Parsing",
+        "description": "Process CLI output to parse JSON, enforce output bounds, and normalize the result object.",
+        "details": "Enhance `src/services/agentBrowserCli.ts`. Implement logic to attempt `JSON.parse` on `stdout`. If parsing fails, treat as raw text. Implement output truncation: if output length > `CHARACTER_LIMIT` (e.g., 100kb) and it is NOT valid JSON, truncate it and set `truncated: true`. If valid JSON, do NOT truncate to preserve machine readability. Return a normalized `CliRunResult` object.",
+        "testStrategy": "Unit tests: Feed large JSON strings (verify no truncation), large text strings (verify truncation), and invalid JSON (verify raw text handling). Check `parsedJson` field population.",
+        "priority": "high",
+        "dependencies": [
+          3
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Define Interfaces for Normalization",
+            "description": "Create the interface definitions for the normalized CLI result object.",
+            "dependencies": [],
+            "details": "In `src/types/index.ts` (or similar shared types file), define `CliRunResult` interface containing `stdout` (string), `stderr` (string), `exitCode` (number), `truncated` (boolean), `parsedJson` (any | null), and `error` (string | undefined). Ensure `agentBrowserCli.ts` imports this interface.",
+            "status": "pending",
+            "testStrategy": "Verify typescript compilation ensures all fields are present."
+          },
+          {
+            "id": 2,
+            "title": "Implement JSON Parsing Helper",
+            "description": "Create a utility function to attempt JSON parsing on string output safely.",
+            "dependencies": [
+              1
+            ],
+            "details": "Implement a helper function (e.g., `tryParseJson(text: string): any | null`). It should return the parsed object if successful, or `null` if the text is not valid JSON. This isolates the parsing logic for unit testing.",
+            "status": "pending",
+            "testStrategy": "Unit test with valid JSON, invalid JSON, and mixed content strings."
+          },
+          {
+            "id": 3,
+            "title": "Implement Output Truncation Logic",
+            "description": "Add logic to check output length against limits and truncate if necessary.",
+            "dependencies": [
+              1
+            ],
+            "details": "Define a constant `CHARACTER_LIMIT` (e.g., 100kb). Create a function that accepts the raw stdout string and a boolean indicating if it is JSON. If not JSON and length > limit, return the truncated string (e.g. first 100kb + '... [truncated]') and set a truncated flag to true.",
+            "status": "pending",
+            "testStrategy": "Unit test with long strings exceeding the limit (non-JSON) to verify truncation, and long JSON strings to verify NO truncation."
+          },
+          {
+            "id": 4,
+            "title": "Integrate Normalization into AgentBrowserCli",
+            "description": "Update the main CLI service to use the parsing and truncation logic.",
+            "dependencies": [
+              2,
+              3
+            ],
+            "details": "Modify `src/services/agentBrowserCli.ts`. Inside the execution flow (after `execFile` or `spawn` completes), pass the raw `stdout` to the JSON parser. Then pass the result to the truncation logic. Construct the final `CliRunResult` object using these processed values.",
+            "status": "pending",
+            "testStrategy": "Integration test: Mock the CLI execution to return specific strings and verify the service returns the correctly structured object."
+          },
+          {
+            "id": 5,
+            "title": "Handle Stderr and Exit Codes",
+            "description": "Ensure stderr and non-zero exit codes are correctly mapped to the result object.",
+            "dependencies": [
+              4
+            ],
+            "details": "Update `src/services/agentBrowserCli.ts` to capture `stderr` and the process exit code. If exit code is non-zero, ensure `error` field is populated (possibly combining `stderr` content). Ensure the final object is always returned even on failure, rather than throwing an uncaught exception.",
+            "status": "pending",
+            "testStrategy": "Simulate a failed CLI command (exit code 1) and verify the result object contains the error details and exit code."
+          }
+        ]
+      },
+      {
+        "id": 5,
+        "title": "File Persistence for Large Outputs",
+        "description": "Implement functionality to save CLI output to a file when requested, bypassing stdio limits.",
+        "details": "Add file writing logic to `src/services/agentBrowserCli.ts`. If `save_output_path` is provided in the request: 1. Validate the path is relative and does not contain directory traversal (`..`). 2. Ensure the parent directory exists (mkdirp). 3. Write the raw `stdout` to the file. 4. Return the path in `savedOutputPath` and omit the full content from the returned `stdout` to keep the MCP payload small.",
+        "testStrategy": "Unit/Integration tests: meaningful path validation tests (reject `/tmp`, `../file`). Test writing to a temp subdirectory and verifying file content matches mock stdout.",
+        "priority": "medium",
+        "dependencies": [
+          4
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Implement Path Security Validation",
+            "description": "Create a utility to validate `save_output_path` ensuring it is relative and safe.",
+            "dependencies": [],
+            "details": "Implement a helper function (e.g., `validateOutputPath`) that takes a path string. It must: 1. Check if the path is relative (not starting with `/` or drive letter). 2. Ensure it does not contain directory traversal sequences (e.g., `../`). 3. Reject paths pointing to sensitive system directories if possible. 4. Throw a specific error if validation fails.",
+            "status": "pending",
+            "testStrategy": "Unit tests with various malicious paths: `../etc/passwd`, `/absolute/path`, `subdir/../../parent`."
+          },
+          {
+            "id": 2,
+            "title": "Implement Directory Existence Check",
+            "description": "Add logic to recursively create the parent directory for the output file.",
+            "dependencies": [
+              1
+            ],
+            "details": "Using Node.js `fs.promises.mkdir`, implement logic to extract the directory component of the validated `save_output_path` and ensure it exists. Use `{ recursive: true }` to handle nested directories (e.g., `logs/session-1/`). Handle errors like permission denied gracefully.",
+            "status": "pending",
+            "testStrategy": "Test with a deep nested path `a/b/c/out.txt` and verify the folder structure is created."
+          },
+          {
+            "id": 3,
+            "title": "Implement File Writing Logic in Service",
+            "description": "Integrate file writing into the `runAgentBrowser` workflow in `agentBrowserCli.ts`.",
+            "dependencies": [
+              2
+            ],
+            "details": "Modify `runAgentBrowser`. If `save_output_path` is present in the request options: 1. Await the process completion to get the full `stdout`. 2. Call the validation and directory creation utilities. 3. Write the raw `stdout` buffer/string to the target file using `fs.promises.writeFile`. Ensure this happens before the function returns.",
+            "status": "pending",
+            "testStrategy": "Mock `fs.writeFile` and assert it is called with the correct content when `save_output_path` is provided."
+          },
+          {
+            "id": 4,
+            "title": "Update CLI Response to Omit Large Payloads",
+            "description": "Modify the return object to include the saved path and truncate stdout.",
+            "dependencies": [
+              3
+            ],
+            "details": "If the file save was successful: 1. Add `savedOutputPath` to the return object. 2. Set the returned `stdout` to a truncated message (e.g., `[Output saved to file: path/to/file]`) or a shortened summary to prevent exceeding MCP payload limits. Ensure `stderr` and exit code are still returned normally.",
+            "status": "pending",
+            "testStrategy": "Verify the returned object structure differs when `save_output_path` is used versus when it is not."
+          },
+          {
+            "id": 5,
+            "title": "Integration Testing for File Persistence",
+            "description": "Verify the end-to-end flow of running a command and saving its output.",
+            "dependencies": [
+              4
+            ],
+            "details": "Create an integration test suite. 1. Run a command that produces known output (e.g., `agent-browser --version` or a simple echo via passthrough if available). 2. Specify a temporary output path. 3. Verify the file exists and contains the exact output. 4. Verify the response object contains the reference path.",
+            "status": "pending",
+            "testStrategy": "Integration test using a temporary directory, ensuring cleanup after test execution."
+          }
+        ]
+      },
+      {
+        "id": 6,
+        "title": "MCP Server Setup & Tool Registry Base",
+        "description": "Initialize the MCP server instance and set up the structure for tool registration.",
+        "details": "Create `src/index.ts` and `src/tools/agentBrowserTools.ts`. Use `@modelcontextprotocol/sdk` to create an `McpServer`. Configure `StdioServerTransport`. Create a skeletal `registerAgentBrowserTools` function. Implement the basic error handling (log fatal errors to stderr). Ensure the server runs and listens on stdio.",
+        "testStrategy": "Smoke test: Run the compiled `index.js` and ensure it doesn't crash. Verify it accepts JSON-RPC input (handshake) via stdin.",
+        "priority": "high",
+        "dependencies": [
+          1,
+          3
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Define Tool Registry Interface",
+            "description": "Create the basic structure for the tool registry file and export the registration function signature.",
+            "dependencies": [],
+            "details": "Create `src/tools/agentBrowserTools.ts`. Import `McpServer` from `@modelcontextprotocol/sdk`. Define and export an empty function `registerAgentBrowserTools(server: McpServer): void`. This acts as the placeholder where future tool definitions (like `agent_open`, `agent_click`) will be implemented. Ensure strict typing is applied.",
+            "status": "pending",
+            "testStrategy": "Verify file exists and compiles with TypeScript without errors."
+          },
+          {
+            "id": 2,
+            "title": "Initialize MCP Server Instance",
+            "description": "Set up the main entry point and initialize the McpServer class with project constants.",
+            "dependencies": [
+              1
+            ],
+            "details": "Create `src/index.ts`. Import `McpServer` from `@modelcontextprotocol/sdk/server/mcp.js`. Import `SERVER_NAME` and `SERVER_VERSION` from `src/constants.ts` (assuming Task 1 defined these, otherwise define placeholders locally). Instantiate the server object: `const server = new McpServer({ name: SERVER_NAME, version: SERVER_VERSION });`.",
+            "status": "pending",
+            "testStrategy": "Unit test verifying the server instance is created with the correct name and version."
+          },
+          {
+            "id": 3,
+            "title": "Implement Stdio Transport Configuration",
+            "description": "Configure the server to communicate via standard input/output using the SDK's transport layer.",
+            "dependencies": [
+              2
+            ],
+            "details": "In `src/index.ts`, import `StdioServerTransport` from `@modelcontextprotocol/sdk/server/stdio.js`. Prepare the transport instance using `const transport = new StdioServerTransport();`. Prepare the connection logic `await server.connect(transport);` but wrap it in a startup function.",
+            "status": "pending",
+            "testStrategy": "Mock `StdioServerTransport` and verify the server attempts to connect to it."
+          },
+          {
+            "id": 4,
+            "title": "Integrate Tool Registry with Server",
+            "description": "Call the tool registration function within the server setup flow.",
+            "dependencies": [
+              1,
+              2,
+              3
+            ],
+            "details": "In `src/index.ts`, import `registerAgentBrowserTools` from `./tools/agentBrowserTools`. Before the server connects to the transport, call `registerAgentBrowserTools(server)`. This ensures that when the server starts, the tools (even if currently empty) are registered.",
+            "status": "pending",
+            "testStrategy": "Verify that `registerAgentBrowserTools` is called exactly once during the server startup sequence using a spy."
+          },
+          {
+            "id": 5,
+            "title": "Implement Main Execution and Error Handling",
+            "description": "Finalize the entry point with a main execution function and global error catching.",
+            "dependencies": [
+              4
+            ],
+            "details": "In `src/index.ts`, create a `main` async function that runs the setup and connection logic. Add a `catch` block to log fatal errors to `console.error` and exit the process with code 1. Invoke `main()` at the end of the file. Ensure the server keeps running (the SDK transport handles the event loop).",
+            "status": "pending",
+            "testStrategy": "Smoke test: Compile and run `node dist/index.js`. Verify it accepts a JSON-RPC handshake on stdin and logs errors to stderr if invalid data is sent."
+          }
+        ]
+      },
+      {
+        "id": 7,
+        "title": "Core Workflow Tools Implementation",
+        "description": "Implement MCP tools for the main browser workflow: Open, Snapshot, Click, Fill, Type, Press.",
+        "details": "In `src/tools/agentBrowserTools.ts`, implement `agent_browser_open`, `agent_browser_snapshot`, `agent_browser_click`, `agent_browser_fill`, `agent_browser_type`, `agent_browser_press`. Define Zod schemas for inputs (url, selector, text, etc.) including global options. Map these inputs to the `runAgentBrowser` service calls with appropriate CLI arguments (e.g., `snapshot` gets `-i` by default for interactive refs).",
+        "testStrategy": "Integration tests: Mock `runAgentBrowser` and verify that calling the MCP tool with specific arguments results in the correct `CliRunRequest` being generated (correct argv sequence).",
+        "priority": "high",
+        "dependencies": [
+          6,
+          4
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Define Zod Schemas for Core Browser Tools",
+            "description": "Create strict Zod validation schemas for Open, Snapshot, Click, Fill, Type, and Press tools to ensure type safety for MCP inputs.",
+            "dependencies": [],
+            "details": "In `src/tools/agentBrowserTools.ts`, define `z.object` schemas for each command. `Open` requires a URL; `Click` and `Fill` require selectors; `Type` requires text; `Press` requires a key combination. Include common global options (headless, userAgent) where applicable via intersection or shared schema definitions.",
+            "status": "pending",
+            "testStrategy": null
+          },
+          {
+            "id": 2,
+            "title": "Implement Handler Logic for Core Browser Tools",
+            "description": "Implement the handler functions that translate tool inputs into specific CLI argument sequences for the binary runner.",
+            "dependencies": [
+              1
+            ],
+            "details": "Implement the logic for `agent_browser_open`, `snapshot`, `click`, `fill`, `type`, and `press`. Ensure `snapshot` automatically includes the `-i` flag for interactive identifiers. Map specific tool properties (e.g., `selector`, `text`) to the correct position in the arguments array passed to `runAgentBrowser`.",
+            "status": "pending",
+            "testStrategy": "Manual verification by running the MCP server and invoking tools with sample inputs to check for runtime errors before writing automated tests."
+          },
+          {
+            "id": 3,
+            "title": "Develop Integration Tests for Core Tool Argument Mapping",
+            "description": "Write integration tests to verify that MCP tool invocations result in the exact expected CLI argument strings.",
+            "dependencies": [
+              2
+            ],
+            "details": "Create `test/tools/agentBrowserTools.spec.ts`. Mock the `runAgentBrowser` service. Invoke each tool (e.g., `agent_browser_fill`) with various valid inputs and assert that the mock was called with the correct array of flags (e.g., `['fill', '#input', 'value', '--json']`). Verify schema validation failures throw appropriate errors.",
+            "status": "pending",
+            "testStrategy": "Run `npm test` and ensure 100% pass rate for the new test suite covering valid inputs, optional flags, and invalid schema inputs."
+          }
+        ]
+      },
+      {
+        "id": 8,
+        "title": "Navigation & Session Management Tools",
+        "description": "Implement tools for browser navigation, session handling, and CDP connection.",
+        "details": "Add tools: `agent_browser_back`, `agent_browser_forward`, `agent_browser_reload`, `agent_browser_close`. Add session tools: `agent_browser_session` (get ID), `agent_browser_session_list`. Add connection tool: `agent_browser_connect` (CDP port). Ensure `agent_browser_close` is marked as a destructive tool in the MCP definition if the SDK supports such metadata (or via description).",
+        "testStrategy": "Mock verification: Ensure `connect` passes the port correctly. Ensure `session list` calls the correct subcommand.",
+        "priority": "medium",
+        "dependencies": [
+          7
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Implement Navigation and Session Tools",
+            "description": "Develop MCP tools for standard browser navigation (back, forward, reload), browser closing, and session ID management.",
+            "dependencies": [],
+            "details": "Define Zod schemas and tool handlers for `agent_browser_back`, `agent_browser_forward`, `agent_browser_reload`, and `agent_browser_close`. Ensure `agent_browser_close` includes descriptions indicating its destructive nature (closing the instance). Implement `agent_browser_session` to fetch current ID and `agent_browser_session_list`. Wire these to `runAgentBrowser` ensuring the correct command-line arguments are passed.",
+            "status": "pending",
+            "testStrategy": "Unit test tool definitions to ensure correct Zod schemas. Integration test with mocked CLI runner to verify correct command generation for navigation and session actions."
+          },
+          {
+            "id": 2,
+            "title": "Implement CDP Connection Tool",
+            "description": "Develop the `agent_browser_connect` tool to enable connecting to a specific Chrome DevTools Protocol port with validation.",
+            "dependencies": [
+              1
+            ],
+            "details": "Define the tool `agent_browser_connect` accepting a `port` argument (integer). Implement input validation to ensure the port is within valid ranges. Map this to the CLI execution command (e.g., `agent-browser connect --port <port>`). Implement error handling for connection failures or invalid ports to return structured errors to the LLM.",
+            "status": "pending",
+            "testStrategy": "Create specific test cases verifying port validation logic (e.g., rejecting non-numeric or out-of-range ports) and verifying the generated CLI command string via mocks."
+          }
+        ]
+      },
+      {
+        "id": 9,
+        "title": "Header Management & Advanced Passthrough",
+        "description": "Implement tools for setting headers and a restricted passthrough for other commands.",
+        "details": "Implement `agent_browser_set_headers` (global) and support per-request headers in `open`. Implement `agent_browser_run` (passthrough). For passthrough: Validate `argv[0]` against `ALLOWED_ROOT_COMMANDS` constant defined in Task 1. If allowed, pass the raw argv to the CLI runner. If not, throw a structured error. This serves as an escape hatch for features not yet wrapped.",
+        "testStrategy": "Security test: Try to run a disallowed command (e.g., `rm`, or a non-allowlisted agent-browser subcommand) via passthrough and assert rejection. Test valid passthrough execution.",
+        "priority": "medium",
+        "dependencies": [
+          8
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Define Header Management Interfaces and Global State",
+            "description": "Create interfaces for header configuration and implement a singleton or state manager to hold global headers.",
+            "dependencies": [],
+            "details": "In `src/types.ts` or a new `src/state.ts`, define a `Headers` type (record of string to string). Implement a module-level variable or a simple class to store global headers that should be applied to all requests. This state will be accessed by the `agent_browser_set_headers` tool and consumed when constructing CLI commands.",
+            "status": "pending",
+            "testStrategy": "Unit test the state manager to ensure headers can be set, retrieved, and merged."
+          },
+          {
+            "id": 2,
+            "title": "Implement agent_browser_set_headers Tool",
+            "description": "Create the MCP tool definition and handler for setting global headers.",
+            "dependencies": [
+              1
+            ],
+            "details": "In `src/tools/headerTools.ts` (or append to existing tools file), implement `agent_browser_set_headers`. It should accept a JSON object of headers. Validate the input using Zod. Update the global header state defined in subtask 1. Ensure these headers are persisted for the session duration in memory.",
+            "status": "pending",
+            "testStrategy": "Verify the tool updates the global state correctly via mock calls."
+          },
+          {
+            "id": 3,
+            "title": "Integrate Headers into CLI Command Generation",
+            "description": "Update the service layer to inject global and per-request headers into the CLI arguments.",
+            "dependencies": [
+              1,
+              2
+            ],
+            "details": "Modify the function responsible for building the agent-browser CLI command (e.g., in `src/services/browserService.ts`). It should check the global header state and any per-request headers (if passed). If the underlying CLI supports headers via flags (e.g., `--header 'Key: Value'`), append these flags to the `argv` array before execution.",
+            "status": "pending",
+            "testStrategy": "Unit test the command builder to ensure header flags are correctly appended to the generated argv array."
+          },
+          {
+            "id": 4,
+            "title": "Implement Passthrough Validation Logic",
+            "description": "Create a validation utility to check commands against the allowed whitelist.",
+            "dependencies": [],
+            "details": "In `src/utils/validation.ts`, implement a function `validatePassthroughCommand(command: string): boolean`. Import `ALLOWED_ROOT_COMMANDS` from `src/constants.ts`. The function should return true only if the command is in the whitelist. This is a critical security step to prevent arbitrary command execution.",
+            "status": "pending",
+            "testStrategy": "Unit test with allowed commands (e.g., 'open') and disallowed commands (e.g., 'rm', 'eval') to ensure strict validation."
+          },
+          {
+            "id": 5,
+            "title": "Implement agent_browser_run Passthrough Tool",
+            "description": "Create the generic passthrough tool that executes validated commands.",
+            "dependencies": [
+              4
+            ],
+            "details": "In `src/tools/passthroughTools.ts`, implement `agent_browser_run`. It should accept `command` (string) and `args` (string array). First, call the validation utility from subtask 4. If valid, construct the full argv array and pass it to the CLI runner service. If invalid, throw a structured `McpError` with code `InvalidParams`.",
+            "status": "pending",
+            "testStrategy": "Integration test: Mock the CLI runner and verify that valid commands are passed through while invalid ones throw an error immediately."
+          }
+        ]
+      },
+      {
+        "id": 10,
+        "title": "Documentation & Distribution Packaging",
+        "description": "Finalize documentation, build scripts, and package configuration for distribution.",
+        "details": "Update `README.md` with installation instructions (`agent-browser` binary requirement), environment variables (`AGENT_BROWSER_BIN`), and usage examples. Configure `package.json` `bin` entry point. Ensure `npm run build` produces a clean `dist/` folder. Add a smoke test script that verifies the server starts.",
+        "testStrategy": "Manual review of README against implemented features. Run build process and verify artifacts.",
+        "priority": "medium",
+        "dependencies": [
+          9
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Configure Build and Packaging Scripts",
+            "description": "Update package.json with clean build scripts and distribution file whitelisting.",
+            "dependencies": [],
+            "details": "Update `package.json` to include a `prebuild` or `clean` script (e.g., using `rimraf dist`) to ensure a fresh compilation. Configure the `files` array to only include `dist/` and `README.md` in the published package. Ensure the `build` script runs `tsc` successfully.",
+            "status": "pending",
+            "testStrategy": "Run `npm run build` and verify that the `dist` folder is deleted and recreated with compiled files."
+          },
+          {
+            "id": 2,
+            "title": "Define CLI Entry Point",
+            "description": "Configure the binary entry point in package.json and ensure the main file is executable.",
+            "dependencies": [
+              1
+            ],
+            "details": "Add a `bin` property to `package.json` pointing to `./dist/index.js` (e.g., `\"mcp-agent-browser\": \"./dist/index.js\"`). Add the `#!/usr/bin/env node` shebang to the top of `src/index.ts` so the compiled artifact functions correctly as a CLI executable.",
+            "status": "pending",
+            "testStrategy": "Run `npm pack`, install the tarball locally, and verify the command is available in the shell."
+          },
+          {
+            "id": 3,
+            "title": "Document Prerequisites and Environment",
+            "description": "Update README.md with critical information about the external binary requirement.",
+            "dependencies": [],
+            "details": "Edit `README.md` to clearly state the dependency on the `agent-browser` Go binary. Document the `AGENT_BROWSER_BIN` environment variable, explaining that it must point to the executable path of the underlying browser agent tool.",
+            "status": "pending",
+            "testStrategy": "Review README.md to ensure the instructions are clear and accurate."
+          },
+          {
+            "id": 4,
+            "title": "Document Usage and Configuration Examples",
+            "description": "Add usage examples for MCP clients to README.md.",
+            "dependencies": [
+              3
+            ],
+            "details": "Add a section to `README.md` providing a standard configuration snippet for `claude_desktop_config.json`. Show how to pass the `AGENT_BROWSER_BIN` variable within the env configuration of the MCP client setup.",
+            "status": "pending",
+            "testStrategy": "Copy the documented config example into a real Claude Desktop config and verify the server connects."
+          },
+          {
+            "id": 5,
+            "title": "Implement Distribution Smoke Test",
+            "description": "Create a script to verify the built server artifact starts up correctly.",
+            "dependencies": [
+              2
+            ],
+            "details": "Create `scripts/smoke_test.js` that attempts to spawn `dist/index.js` as a child process. It should send a mock JSON-RPC initialization message to stdin and assert that the process does not crash and returns a valid response or keeps the stream open.",
+            "status": "pending",
+            "testStrategy": "Run `node scripts/smoke_test.js` after building the project to confirm the distribution artifact is functional."
+          }
+        ]
+      }
+    ],
+    "metadata": {
+      "created": "2026-01-21T20:53:49.115Z",
+      "updated": "2026-01-21T20:53:49.115Z",
+      "description": "Tasks for master context"
+    }
+  },
+  "chore-mcp": {
+    "tasks": [],
+    "metadata": {
+      "created": "2026-01-21T20:59:06.932Z",
+      "updated": "2026-01-21T20:59:06.932Z",
+      "description": "Tag created on 1/21/2026"
+    }
+  }
+}
